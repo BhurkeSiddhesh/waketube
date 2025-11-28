@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>WakeTube - AI Alarm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              primary: '#f43f5e', // Rose 500
+              secondary: '#6366f1', // Indigo 500
+              
+              // Dynamic Theme Colors mapped to CSS Variables
+              darker: 'var(--bg-main)', 
+              surface: 'var(--bg-surface)',
+              body: 'var(--text-body)',
+              borderDim: 'var(--border-color)',
+              
+              // Hardcoded fallback for strictly dark elements
+              'true-black': '#000000',
+            },
+            animation: {
+              'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Theme Variables */
+      :root {
+        /* Light Mode Defaults */
+        --bg-main: #f8fafc; /* Slate 50 */
+        --bg-surface: #ffffff; /* White */
+        --text-body: #0f172a; /* Slate 900 */
+        --border-color: #e2e8f0; /* Slate 200 */
+      }
+
+      .dark {
+        /* Dark Mode Overrides */
+        --bg-main: #020617; /* Slate 950 */
+        --bg-surface: #1e293b; /* Slate 800 */
+        --text-body: #ffffff; /* White */
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+          display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-player": "https://aistudiocdn.com/react-player@^3.4.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-darker text-body h-screen overflow-hidden selection:bg-primary selection:text-white transition-colors duration-300">
+    <div id="root" class="h-full w-full"></div>
+  </body>
+</html>
