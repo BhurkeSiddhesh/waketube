@@ -8,9 +8,7 @@ import WakeTubeIcon from './components/WakeTubeIcon';
 import { v4 as uuidv4 } from 'uuid'; // Using uuid for unique IDs
 import { GoogleGenAI } from "@google/genai";
 
-// Mock UUID if package not available in environment, though standard dev envs have it.
-// To be safe in a generated code block without package.json control:
-const generateId = () => Math.random().toString(36).substr(2, 9);
+const generateId = () => uuidv4();
 
 const App: React.FC = () => {
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
