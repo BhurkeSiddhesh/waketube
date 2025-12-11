@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, BatteryCharging, AlertTriangle, Moon, Sun } from 'lucide-react';
-import { Alarm, DayOfWeek } from './types';
-import AlarmCard from './components/AlarmCard';
-import AddAlarmModal from './components/AddAlarmModal';
-import AlarmTrigger from './components/AlarmTrigger';
+import { Alarm, DayOfWeek } from '../types';
+import AlarmCard from '../components/AlarmCard';
+import AddAlarmModal from '../components/AddAlarmModal';
+import AlarmTrigger from '../components/AlarmTrigger';
 import WakeTubeIcon from './components/WakeTubeIcon';
 import { v4 as uuidv4 } from 'uuid'; // Using uuid for unique IDs
 import { GoogleGenAI } from "@google/genai";
@@ -19,7 +19,7 @@ const App: React.FC = () => {
   });
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [activeAlarm, setActiveAlarm] = useState<Alarm | null>(null);
+  const [activeAlarms, setActiveAlarms] = useState<Alarm[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Theme State
@@ -108,27 +108,26 @@ const App: React.FC = () => {
       }
 
       // Check alarms
-      // ONLY check if no alarm is currently active (no overlapping alarms support for simplicity)
-      if (!activeAlarm) {
-        const matchingAlarm = alarms.find(a => {
-          return (
-            a.enabled &&
-            a.time === timeString &&
-            a.days.includes(currentDay) &&
-            !triggeredThisMinute.includes(a.id)
-          );
-        });
+      // Check for any matching alarms (overlapping allowed)
+      const matchingAlarms = alarms.filter(a => {
+        return (
+          a.enabled &&
+          a.time === timeString &&
+          a.days.includes(currentDay) &&
+          !triggeredThisMinute.includes(a.id) &&
+          !activeAlarms.some(active => active.id === a.id)
+        );
+      });
 
-        if (matchingAlarm) {
-          setActiveAlarm(matchingAlarm);
-          setTriggeredThisMinute(prev => [...prev, matchingAlarm.id]);
-        }
+      if (matchingAlarms.length > 0) {
+        setActiveAlarms(prev => [...prev, ...matchingAlarms]);
+        setTriggeredThisMinute(prev => [...prev, ...matchingAlarms.map(a => a.id)]);
       }
 
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [alarms, activeAlarm, triggeredThisMinute]);
+  }, [alarms, activeAlarms, triggeredThisMinute]);
 
   const addAlarm = (newAlarmData: Omit<Alarm, 'id'>) => {
     const newAlarm: Alarm = { ...newAlarmData, id: generateId() };
@@ -143,8 +142,8 @@ const App: React.FC = () => {
     setAlarms(alarms.filter(a => a.id !== id));
   };
 
-  const dismissAlarm = () => {
-    setActiveAlarm(null);
+  const dismissAlarm = (id: string) => {
+    setActiveAlarms(prev => prev.filter(a => a.id !== id));
     // Note: We've already added it to triggeredThisMinute, so it won't ring again immediately.
   };
 
@@ -238,12 +237,13 @@ const App: React.FC = () => {
         />
       )}
 
-      {activeAlarm && (
+      {activeAlarms.map(alarm => (
         <AlarmTrigger 
-          alarm={activeAlarm} 
-          onDismiss={dismissAlarm} 
+          key={alarm.id}
+          alarm={alarm}
+          onDismiss={() => dismissAlarm(alarm.id)}
         />
-      )}
+      ))}
     </div>
   );
 };
