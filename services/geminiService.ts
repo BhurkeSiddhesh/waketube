@@ -30,14 +30,34 @@ export const suggestMusicVideo = async (query: string): Promise<{ url: string; t
     
     if (urlMatch) {
       const url = urlMatch[0];
-      // Try to extract title from remaining text or grounding metadata if possible, 
-      // but for now, we'll just use the user's query as a fallback title if the model doesn't output one clearly.
-      const lines = text.split('\n').filter(l => l.trim().length > 0);
-      const titleLine = lines.find(l => !l.includes(url)) || query;
+      let title = "";
+
+      // Try to find title in grounding metadata first
+      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+      if (chunks) {
+        const matchingChunk = chunks.find(c => c.web?.uri === url);
+        if (matchingChunk?.web?.title) {
+          title = matchingChunk.web.title;
+        }
+      }
+
+      // If not found in metadata, try to extract from text
+      if (!title) {
+        const lines = text.split('\n').filter(l => l.trim().length > 0);
+        const titleLine = lines.find(l => !l.includes(url));
+        if (titleLine) {
+          title = titleLine.replace(/^[-: ]+/, '').trim();
+        }
+      }
+
+      // Fallback to query
+      if (!title) {
+        title = query;
+      }
       
       return {
         url,
-        title: titleLine.replace(/^[-: ]+/, '').trim()
+        title
       };
     }
     
