@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, BatteryCharging, AlertTriangle, Moon, Sun } from 'lucide-react';
-import { Alarm, DayOfWeek } from '../types';
-import AlarmCard from '../components/AlarmCard';
-import AddAlarmModal from '../components/AddAlarmModal';
-import AlarmTrigger from '../components/AlarmTrigger';
+import { Alarm, DayOfWeek } from './types';
+import AlarmCard from './components/AlarmCard';
+import AddAlarmModal from './components/AddAlarmModal';
+import AlarmTrigger from './components/AlarmTrigger';
 import WakeTubeIcon from './components/WakeTubeIcon';
 import { v4 as uuidv4 } from 'uuid'; // Using uuid for unique IDs
 import { GoogleGenAI } from "@google/genai";
@@ -15,11 +15,11 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('waketube-alarms');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeAlarms, setActiveAlarms] = useState<Alarm[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const savedTheme = localStorage.getItem('waketube-theme');
@@ -62,22 +62,22 @@ const App: React.FC = () => {
         // Specific handling for policy errors reported by users in iframe environments
         const msg = err.message || '';
         const isPolicyError = msg.includes('permissions policy') || err.name === 'NotAllowedError';
-        
+
         if (isPolicyError) {
-           // Silently fail if blocked by environment policy to prevent console noise
-           // This is expected behavior in some sandboxed iframes
-           return;
-        } 
-        
+          // Silently fail if blocked by environment policy to prevent console noise
+          // This is expected behavior in some sandboxed iframes
+          return;
+        }
+
         if (err.name !== 'AbortError') {
-           console.warn('Wake Lock request failed:', err);
+          console.warn('Wake Lock request failed:', err);
         }
       }
     };
-    
+
     // Request on mount and whenever visibility changes (e.g. tab switching)
     requestWakeLock();
-    
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         requestWakeLock();
@@ -147,7 +147,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-darker text-body font-sans relative flex flex-col transition-colors duration-300">
-      
+
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -156,15 +156,15 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex flex-col p-6 max-w-2xl mx-auto w-full">
-        
+
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <WakeTubeIcon className="w-10 h-10 shadow-lg shadow-primary/20" />
             <h1 className="text-2xl font-black tracking-tight text-body">WakeTube</h1>
           </div>
-          
-          <button 
+
+          <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-surface text-gray-500 hover:text-body transition-colors border border-transparent hover:border-borderDim"
             aria-label="Toggle theme"
@@ -181,15 +181,15 @@ const App: React.FC = () => {
           <div className="text-xl font-bold text-gray-400 uppercase tracking-widest mt-2">
             {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
           </div>
-          
+
           <div className="mt-8 flex items-center gap-2 text-xs font-medium text-green-500 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
-             <BatteryCharging size={12} />
-             <span>Active & Monitoring</span>
+            <BatteryCharging size={12} />
+            <span>Active & Monitoring</span>
           </div>
-          
+
           <div className="mt-2 flex items-center gap-2 text-xs font-medium text-orange-400">
-             <AlertTriangle size={12} />
-             <span>Keep tab open to ring</span>
+            <AlertTriangle size={12} />
+            <span>Keep tab open to ring</span>
           </div>
         </div>
 
@@ -199,7 +199,7 @@ const App: React.FC = () => {
             <h3 className="text-gray-400 text-sm font-bold uppercase tracking-wider">Your Alarms</h3>
             <span className="text-gray-400 text-xs">{alarms.filter(a => a.enabled).length} Active</span>
           </div>
-          
+
           {alarms.length === 0 ? (
             <div className="text-center py-10 border-2 border-dashed border-borderDim rounded-2xl">
               <p className="text-gray-400 mb-2">No alarms set</p>
@@ -207,10 +207,10 @@ const App: React.FC = () => {
             </div>
           ) : (
             alarms.map(alarm => (
-              <AlarmCard 
-                key={alarm.id} 
-                alarm={alarm} 
-                onToggle={toggleAlarm} 
+              <AlarmCard
+                key={alarm.id}
+                alarm={alarm}
+                onToggle={toggleAlarm}
                 onDelete={deleteAlarm}
               />
             ))
@@ -218,7 +218,7 @@ const App: React.FC = () => {
         </div>
 
         {/* FAB */}
-        <button 
+        <button
           onClick={() => setIsAddModalOpen(true)}
           className="fixed bottom-8 right-8 w-16 h-16 bg-primary hover:bg-rose-600 text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-30"
         >
@@ -229,14 +229,14 @@ const App: React.FC = () => {
 
       {/* Modals & Overlays */}
       {isAddModalOpen && (
-        <AddAlarmModal 
-          onClose={() => setIsAddModalOpen(false)} 
+        <AddAlarmModal
+          onClose={() => setIsAddModalOpen(false)}
           onSave={addAlarm}
         />
       )}
 
       {activeAlarms.map(alarm => (
-        <AlarmTrigger 
+        <AlarmTrigger
           key={alarm.id}
           alarm={alarm}
           onDismiss={() => dismissAlarm(alarm.id)}
