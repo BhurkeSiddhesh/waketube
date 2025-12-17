@@ -1,9 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getClient = () => {
-  const apiKey = process.env.API_KEY;
+  // Use import.meta.env for Vite compatibility, fallback to process.env if defined via config
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("API Key not found");
+    return null;
   }
   return new GoogleGenAI({ apiKey });
 };
@@ -11,6 +12,10 @@ const getClient = () => {
 export const suggestMusicVideo = async (query: string): Promise<{ url: string; title: string } | null> => {
   try {
     const client = getClient();
+    if (!client) {
+      console.warn("No Gemini API Key found. AI features are disabled.");
+      return null;
+    }
     
     // We use search grounding to find a real YouTube link
     const response = await client.models.generateContent({

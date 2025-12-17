@@ -36,6 +36,14 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
     if (result) {
       setVideoUrl(result.url);
       setLabel(result.title.substring(0, 30)); // Update label to song name
+    } else {
+      // If result is null, it might be due to missing API key or no results.
+      // We can optionally alert the user or just do nothing (letting them paste manually).
+      // For now, let's just log a warning to console and maybe clear the query to indicate failure visually?
+      // Or better, set a placeholder message in the search box?
+      // Given the requirement for "free mode", failing silently or with a log is safer than crashing.
+      console.warn("AI Search returned no results or is disabled (missing API key).");
+      alert("AI Search is unavailable (requires API Key). Please paste a YouTube URL below.");
     }
   };
 
