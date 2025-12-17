@@ -47,6 +47,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete }) => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs text-secondary mt-1 hover:text-secondary/80"
               onClick={(e) => e.stopPropagation()}
+              aria-label={`Open video: ${alarm.label || 'Alarm video'}`}
             >
               <ExternalLink size={10} />
               <span>Video Link</span>
@@ -62,6 +63,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete }) => {
               className="sr-only peer" 
               checked={alarm.enabled}
               onChange={() => onToggle(alarm.id)}
+              aria-label={alarm.enabled ? "Disable alarm" : "Enable alarm"}
             />
             <div className="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>
@@ -69,6 +71,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete }) => {
           <button 
             onClick={() => onDelete(alarm.id)}
             className="text-gray-400 hover:text-red-400 transition-colors p-2 -mr-2"
+            aria-label="Delete alarm"
           >
             <Trash2 size={18} />
           </button>

@@ -57,7 +57,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-borderDim bg-darker/5">
           <h2 className="text-xl font-bold text-body">New Alarm</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-body transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-body transition-colors" aria-label="Close modal">
             <X size={24} />
           </button>
         </div>
@@ -78,11 +78,13 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
           {/* Days Selection */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Repeats</label>
-            <div className="flex justify-between gap-1">
+            <div className="flex justify-between gap-1" role="group" aria-label="Repeat days">
               {DAYS_LABELS.map((label, idx) => (
                 <button
                   key={idx}
                   onClick={() => toggleDay(idx as DayOfWeek)}
+                  aria-pressed={selectedDays.includes(idx as DayOfWeek)}
+                  aria-label={`Repeat on ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][idx]}`}
                   className={clsx(
                     "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all",
                     selectedDays.includes(idx as DayOfWeek)
@@ -115,6 +117,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
                 onClick={handleAISearch}
                 disabled={isSearching || !searchQuery}
                 className="bg-secondary/10 hover:bg-secondary/20 text-secondary p-3 rounded-lg border border-secondary/50 transition-colors disabled:opacity-50"
+                aria-label="Search music video"
               >
                 {isSearching ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
               </button>
