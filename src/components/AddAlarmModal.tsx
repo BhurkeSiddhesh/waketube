@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
-import { X, Search, Sparkles, Loader2, Music2 } from 'lucide-react';
-import { suggestMusicVideo } from '../services/geminiService';
+import { X, Youtube, Music2, Clock } from 'lucide-react';
+import YouTubeSearchModal from './YouTubeSearchModal';
 import clsx from 'clsx';
 
 interface AddAlarmModalProps {
@@ -9,13 +9,44 @@ interface AddAlarmModalProps {
   onSave: (alarm: Omit<Alarm, 'id'>) => void;
 }
 
+// Get time-based label suggestions
+const getTimeBasedSuggestion = (hour: number): string => {
+  if (hour >= 5 && hour < 7) return "Early Bird Rise";
+  if (hour >= 7 && hour < 9) return "Morning Energy";
+  if (hour >= 9 && hour < 12) return "Mid-Morning Focus";
+  if (hour >= 12 && hour < 14) return "Lunch Break";
+  if (hour >= 14 && hour < 17) return "Afternoon Power";
+  if (hour >= 17 && hour < 20) return "Evening Wind Down";
+  if (hour >= 20 && hour < 23) return "Night Mode";
+  return "Late Night Vibes";
+};
+
+// Get suggested YouTube searches based on time
+const getTimeSuggestions = (hour: number): string[] => {
+  if (hour >= 5 && hour < 9) return ["morning music", "wake up songs", "energetic playlist"];
+  if (hour >= 9 && hour < 12) return ["focus music", "productivity", "instrumental"];
+  if (hour >= 12 && hour < 17) return ["lo-fi beats", "chill music", "afternoon vibes"];
+  if (hour >= 17 && hour < 21) return ["relaxing music", "acoustic", "evening chill"];
+  return ["calm music", "sleep sounds", "ambient"];
+};
+
 const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
-  const [time, setTime] = useState('07:00');
-  const [label, setLabel] = useState('Toccata and Fugue - Bach');
-  const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/watch?v=7GlsxNI4LVI'); // Default Toccata and Fugue
-  const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>([0, 1, 2, 3, 4, 5, 6]); // Every day default
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
+  const [time, setTime] = useState(() => {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  });
+
+  const currentHour = new Date().getHours();
+  const suggestedLabel = useMemo(() => getTimeBasedSuggestion(currentHour), [currentHour]);
+  const timeSuggestions = useMemo(() => getTimeSuggestions(currentHour), [currentHour]);
+
+  const [label, setLabel] = useState('');
+  const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/watch?v=7GlsxNI4LVI');
+  const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(() => {
+    const today = new Date().getDay() as DayOfWeek;
+    return [today];
+  });
+  const [showYouTubeSearch, setShowYouTubeSearch] = useState(false);
 
   const toggleDay = (day: DayOfWeek) => {
     if (selectedDays.includes(day)) {
@@ -25,26 +56,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
     }
   };
 
-  const handleAISearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
-    setIsSearching(true);
-    const result = await suggestMusicVideo(searchQuery);
-    setIsSearching(false);
-
-    if (result) {
-      setVideoUrl(result.url);
-      setLabel(result.title.substring(0, 30)); // Update label to song name
-    } else {
-      // If result is null, it might be due to missing API key or no results.
-      // We can optionally alert the user or just do nothing (letting them paste manually).
-      // For now, let's just log a warning to console and maybe clear the query to indicate failure visually?
-      // Or better, set a placeholder message in the search box?
-      // Given the requirement for "free mode", failing silently or with a log is safer than crashing.
-      console.warn("AI Search returned no results or is disabled (missing API key).");
-      alert("AI Search is unavailable (requires API Key). Please paste a YouTube URL below.");
+  const handleYouTubeSelect = (url: string, title: string) => {
+    setVideoUrl(url);
+    if (!label) {
+      setLabel(title.substring(0, 40));
     }
+    setShowYouTubeSearch(false);
   };
 
   const handleSave = () => {
@@ -53,118 +70,143 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
       days: selectedDays,
       enabled: true,
       videoUrl,
-      label,
+      label: label || suggestedLabel,
     });
     onClose();
   };
 
+  if (showYouTubeSearch) {
+    return (
+      <YouTubeSearchModal
+        onClose={() => setShowYouTubeSearch(false)}
+        onSelect={handleYouTubeSelect}
+        initialQuery={timeSuggestions[0]}
+      />
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-0 animate-in fade-in duration-200">
-      <div className="bg-surface w-full max-w-md rounded-2xl border border-borderDim shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
-        
+    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-0 animate-in fade-in duration-200">
+      <div className="glass-strong w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
+
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-borderDim bg-darker/5">
-          <h2 className="text-xl font-bold text-body">New Alarm</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-body transition-colors" aria-label="Close modal">
-            <X size={24} />
+        <div className="flex justify-between items-center p-5 border-b border-borderDim">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <Clock size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-body">New Alarm</h2>
+              <p className="text-xs text-gray-500">{suggestedLabel}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-body hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto no-scrollbar">
-          
+        <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto no-scrollbar">
+
           {/* Time Input */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Time</label>
-            <input 
-              type="time" 
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time</label>
+            <input
+              type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-full bg-darker text-4xl sm:text-5xl font-mono p-4 rounded-xl border-2 border-borderDim focus:border-primary focus:outline-none text-center text-body transition-colors"
+              className="w-full glass text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body"
             />
           </div>
 
           {/* Days Selection */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Repeats</label>
-            <div className="flex justify-between gap-1" role="group" aria-label="Repeat days">
-              {DAYS_LABELS.map((label, idx) => (
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Repeats</label>
+            <div className="flex justify-between gap-1.5">
+              {DAYS_LABELS.map((dayLabel, idx) => (
                 <button
                   key={idx}
                   onClick={() => toggleDay(idx as DayOfWeek)}
-                  aria-pressed={selectedDays.includes(idx as DayOfWeek)}
-                  aria-label={`Repeat on ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][idx]}`}
                   className={clsx(
-                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all",
+                    "flex-1 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all",
                     selectedDays.includes(idx as DayOfWeek)
-                      ? "bg-secondary text-white shadow-lg shadow-secondary/20 scale-105"
-                      : "bg-darker text-gray-500 hover:bg-black/5 dark:hover:bg-white/5"
+                      ? "bg-primary text-white"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-body"
                   )}
                 >
-                  {label}
+                  {dayLabel}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* AI Music Finder */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1">
-              <Sparkles size={12} />
-              AI Music Finder
-            </label>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="e.g. 'Epic Hans Zimmer' or '90s Rock'" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAISearch(e)}
-                className="flex-1 bg-darker text-sm p-3 rounded-lg border border-borderDim focus:border-secondary focus:outline-none text-body placeholder:text-gray-500"
-              />
-              <button 
-                onClick={handleAISearch}
-                disabled={isSearching || !searchQuery}
-                className="bg-secondary/10 hover:bg-secondary/20 text-secondary p-3 rounded-lg border border-secondary/50 transition-colors disabled:opacity-50"
-                aria-label="Search music video"
-              >
-                {isSearching ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
-              </button>
+          {/* YouTube Search Section */}
+          <div className="space-y-3">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Wake-Up Sound</label>
+
+            <button
+              onClick={() => setShowYouTubeSearch(true)}
+              className="w-full glass p-4 rounded-xl border border-borderDim hover:border-primary/50 transition-all flex items-center gap-4 group"
+            >
+              <div className="w-11 h-11 rounded-lg bg-danger flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Youtube size={22} className="text-white" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-medium text-body">Browse YouTube</p>
+                <p className="text-xs text-gray-500">Search and select a video</p>
+              </div>
+            </button>
+
+            {/* Quick Suggestions */}
+            <div className="flex flex-wrap gap-2">
+              {timeSuggestions.map((suggestion, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setShowYouTubeSearch(true)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary hover:bg-primary/5 transition-all"
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Video URL & Label */}
-          <div className="space-y-4 pt-4 border-t border-borderDim">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">YouTube URL</label>
-              <div className="relative">
-                <Music2 className="absolute left-3 top-3 text-gray-500" size={16} />
-                <input 
-                  type="text" 
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  className="w-full bg-darker text-sm p-3 pl-10 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-gray-500"
-                />
-              </div>
-            </div>
+          {/* Video URL Display */}
+          <div className="space-y-2 pt-4 border-t border-borderDim">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
+              <Music2 size={12} />
+              Selected Video
+            </label>
+            <input
+              type="text"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="Paste YouTube URL or search above"
+              className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-gray-500"
+            />
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Label</label>
-              <input 
-                type="text" 
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                className="w-full bg-darker text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body"
-              />
-            </div>
+          {/* Label Input */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Label</label>
+            <input
+              type="text"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder={suggestedLabel}
+              className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
+            />
           </div>
 
         </div>
 
         {/* Footer */}
-        <div className="p-6 pt-4 border-t border-borderDim bg-darker/5">
-          <button 
+        <div className="p-5 pt-4 border-t border-borderDim">
+          <button
             onClick={handleSave}
-            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] uppercase tracking-widest text-sm"
+            className="w-full bg-primary hover:bg-primary-light text-white font-medium py-3.5 rounded-xl shadow-md shadow-primary/20 transition-all active:scale-[0.98]"
           >
             Set Alarm
           </button>
