@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { X, Search, ExternalLink, Youtube } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Search, ExternalLink, Youtube, Loader2, Play, CheckCircle2, AlertCircle } from 'lucide-react';
+import { searchYouTubeVideos } from '../services/geminiService';
 
 interface YouTubeSearchModalProps {
     onClose: () => void;
@@ -7,25 +8,49 @@ interface YouTubeSearchModalProps {
     initialQuery?: string;
 }
 
+interface VideoResult {
+    url: string;
+    title: string;
+}
+
 const YouTubeSearchModal: React.FC<YouTubeSearchModalProps> = ({ onClose, onSelect, initialQuery = '' }) => {
     const [searchQuery, setSearchQuery] = useState(initialQuery);
+    const [results, setResults] = useState<VideoResult[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const getYouTubeSearchUrl = (query: string) => {
-        const encodedQuery = encodeURIComponent(query);
-        return `https://www.youtube.com/results?search_query=${encodedQuery}`;
-    };
-
-    const handleSearch = () => {
+    const handleSearch = async () => {
         if (!searchQuery.trim()) return;
+
+        setIsLoading(true);
         setHasSearched(true);
+        setError(null);
+
+        try {
+            const searchResults = await searchYouTubeVideos(searchQuery);
+            if (searchResults.length === 0) {
+                setError("No videos found. Please try a different search term or check your API key.");
+            }
+            setResults(searchResults);
+        } catch (err) {
+            setError("Failed to fetch videos. Please check your connection or API key.");
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             handleSearch();
         }
+    };
+
+    const getThumbnailUrl = (url: string) => {
+        const videoIdMatch = url.match(/(?:\?v=|\/embed\/|\/watch\?v=|\/v\/|youtu\.be\/|watch\?.*v=)([^#\&\?]*).*/);
+        const videoId = videoIdMatch && videoIdMatch[1];
+        return videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null;
     };
 
     return (
@@ -40,7 +65,7 @@ const YouTubeSearchModal: React.FC<YouTubeSearchModalProps> = ({ onClose, onSele
                         </div>
                         <div>
                             <h2 className="font-semibold text-body">Find Your Wake-Up Song</h2>
-                            <p className="text-xs text-gray-500">Search YouTube and select a video</p>
+                            <p className="text-xs text-gray-500">Fast, in-app search powered by Gemini</p>
                         </div>
                     </div>
                     <button
@@ -68,71 +93,137 @@ const YouTubeSearchModal: React.FC<YouTubeSearchModalProps> = ({ onClose, onSele
                         </div>
                         <button
                             onClick={handleSearch}
-                            disabled={!searchQuery.trim()}
-                            className="px-6 py-3.5 bg-primary hover:bg-primary-light text-white font-medium rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 shadow-md shadow-primary/20"
+                            disabled={isLoading || !searchQuery.trim()}
+                            className="px-6 py-3.5 bg-primary hover:bg-primary-light text-white font-medium rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 shadow-md shadow-primary/20 flex items-center gap-2"
                         >
+                            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
                             Search
                         </button>
                     </div>
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 flex">
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                     {!hasSearched ? (
-                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-danger/10 flex items-center justify-center mb-5">
-                                <Youtube size={32} className="text-danger" />
+                        <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                            <div className="w-20 h-20 rounded-3xl bg-danger/10 flex items-center justify-center mb-6">
+                                <Youtube size={40} className="text-danger" />
                             </div>
-                            <h3 className="text-lg font-semibold text-body mb-2">Search YouTube</h3>
-                            <p className="text-gray-500 max-w-sm mb-6">
-                                Find the perfect song or sound to wake up to
+                            <h3 className="text-xl font-bold text-body mb-2">Ready to Search</h3>
+                            <p className="text-gray-500 max-w-sm mb-8">
+                                Enter a song name or artist above to find the perfect alarm sound.
                             </p>
-                            <div className="text-left text-sm text-gray-500 space-y-2">
-                                <p>1. Search for a video above</p>
-                                <p>2. Click on a video in the results</p>
-                                <p>3. Copy the URL and paste below</p>
+                            <div className="flex flex-wrap justify-center gap-2 max-w-md">
+                                {['Lofi Beats', 'Ocean Waves', 'Morning Jazz', 'Nature Sounds'].map(suggestion => (
+                                    <button
+                                        key={suggestion}
+                                        onClick={() => { setSearchQuery(suggestion); handleSearch(); }}
+                                        className="text-xs px-4 py-2 rounded-full glass border border-borderDim hover:border-primary/40 hover:text-primary transition-all"
+                                    >
+                                        {suggestion}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    ) : (
-                        <div className="flex-1 flex flex-col">
-                            <iframe
-                                ref={iframeRef}
-                                src={getYouTubeSearchUrl(searchQuery)}
-                                className="flex-1 w-full border-0"
-                                title="YouTube Search"
-                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                            />
-
-                            {/* Manual URL input */}
-                            <div className="p-4 border-t border-borderDim">
-                                <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                                    <ExternalLink size={12} />
-                                    Found your video? Paste the URL here:
-                                </p>
-                                <div className="flex gap-3">
-                                    <input
-                                        type="text"
-                                        placeholder="https://www.youtube.com/watch?v=..."
-                                        className="flex-1 glass text-body text-sm p-3 rounded-xl border border-borderDim focus:border-primary focus:outline-none placeholder:text-gray-400"
-                                        id="youtube-url-input"
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            const input = document.getElementById('youtube-url-input') as HTMLInputElement;
-                                            if (input?.value) {
-                                                const title = searchQuery || 'YouTube Video';
-                                                onSelect(input.value, title);
-                                            }
-                                        }}
-                                        className="px-5 py-3 bg-secondary hover:bg-green-600 text-white font-medium rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-secondary/20"
-                                    >
-                                        Use This Video
-                                    </button>
-                                </div>
+                    ) : isLoading ? (
+                        <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                            <div className="relative mb-6">
+                                <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+                                <Youtube size={24} className="absolute inset-0 m-auto text-primary animate-pulse" />
                             </div>
+                            <h3 className="text-lg font-semibold text-body mb-2">Gemini is Searching...</h3>
+                            <p className="text-gray-500 max-w-xs animate-pulse">
+                                Finding the best YouTube videos for your morning.
+                            </p>
+                        </div>
+                    ) : error ? (
+                        <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                            <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-5 text-orange-500">
+                                <AlertCircle size={32} />
+                            </div>
+                            <h3 className="text-lg font-semibold text-body mb-2">Search Issue</h3>
+                            <p className="text-gray-500 max-w-sm mb-6">{error}</p>
+                            <button
+                                onClick={handleSearch}
+                                className="px-6 py-2.5 bg-gray-100 dark:bg-gray-800 text-body font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {results.map((video, idx) => (
+                                <div
+                                    key={idx}
+                                    className="group glass rounded-2xl overflow-hidden border border-borderDim hover:border-primary/50 transition-all flex flex-col shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
+                                >
+                                    <div className="aspect-video relative overflow-hidden bg-gray-100 dark:bg-gray-900">
+                                        {getThumbnailUrl(video.url) ? (
+                                            <img
+                                                src={getThumbnailUrl(video.url)!}
+                                                alt={video.title}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <Youtube size={32} className="text-gray-300" />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <a
+                                                href={video.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <Play size={24} fill="currentColor" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 flex-1 flex flex-col">
+                                        <h4 className="font-semibold text-sm text-body line-clamp-2 mb-4 group-hover:text-primary transition-colors">
+                                            {video.title}
+                                        </h4>
+                                        <div className="mt-auto flex items-center justify-between gap-3">
+                                            <a
+                                                href={video.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[10px] text-gray-400 hover:text-primary flex items-center gap-1 transition-colors"
+                                            >
+                                                <ExternalLink size={10} />
+                                                View on YT
+                                            </a>
+                                            <button
+                                                onClick={() => onSelect(video.url, video.title)}
+                                                className="px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+                                            >
+                                                <CheckCircle2 size={14} />
+                                                Select
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
+
+                {/* Footer Fallback */}
+                {hasSearched && !isLoading && (
+                    <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-borderDim flex items-center justify-between">
+                        <p className="text-xs text-gray-500">Not finding what you want?</p>
+                        <a
+                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+                        >
+                            Open search on YouTube <ExternalLink size={12} />
+                        </a>
+                    </div>
+                )}
             </div>
         </div>
     );
