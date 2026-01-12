@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
-import { X, Youtube, Clock, Loader2, History, Trash2 } from 'lucide-react';
+import { X, Youtube, Clock, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useVideoHistory } from '../hooks/useVideoHistory';
 import { fetchYouTubeTitle } from '../utils/youtube';
@@ -40,7 +40,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
   const [videoUrl, setVideoUrl] = useState(editingAlarm?.videoUrl || 'https://www.youtube.com/watch?v=7GlsxNI4LVI');
   const [videoTitle, setVideoTitle] = useState<string | null>(null);
   const [isFetchingTitle, setIsFetchingTitle] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(() => {
     if (editingAlarm) return editingAlarm.days;
     const today = new Date().getDay() as DayOfWeek;
@@ -165,64 +164,42 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
           </div>
 
           {/* YouTube URL Input */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                <Youtube size={14} className="text-danger" />
-                YouTube URL
-              </label>
-              {videos.length > 0 && (
-                <button
-                  onClick={() => setShowHistory(!showHistory)}
-                  className={clsx(
-                    "text-xs flex items-center gap-1 px-2 py-1 rounded-md transition-all",
-                    showHistory
-                      ? "bg-primary text-white"
-                      : "text-gray-500 hover:text-body hover:bg-gray-100 dark:hover:bg-gray-800"
-                  )}
-                  data-testid="history-toggle"
-                >
-                  <History size={12} />
-                  Recent
-                </button>
-              )}
-            </div>
+          <div className="space-y-3">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Youtube size={14} className="text-danger" />
+              YouTube Video
+            </label>
 
-            {/* Recently Used Videos Dropdown */}
-            {showHistory && videos.length > 0 && (
-              <div className="glass rounded-lg border border-borderDim max-h-32 overflow-y-auto" data-testid="video-history">
-                {videos.map((video) => (
-                  <div
-                    key={video.url}
-                    className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group"
-                  >
-                    <button
-                      onClick={() => selectFromHistory(video.url, video.title)}
-                      className="flex-1 text-left text-sm text-body truncate pr-2"
-                      data-testid="history-item"
-                    >
+            {/* Saved Videos Dropdown - Always visible when videos exist */}
+            {videos.length > 0 && (
+              <div className="space-y-2">
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const video = videos.find(v => v.url === e.target.value);
+                    if (video) {
+                      selectFromHistory(video.url, video.title);
+                    }
+                  }}
+                  className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-transparent cursor-pointer"
+                  data-testid="video-select"
+                >
+                  <option value="" disabled>📚 Choose from saved videos ({videos.length})</option>
+                  {videos.map((video) => (
+                    <option key={video.url} value={video.url}>
                       {video.title}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeVideo(video.url);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-danger transition-all p-1 rounded"
-                      data-testid="remove-history-item"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
+            {/* URL Input */}
             <input
               type="text"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="Paste YouTube video URL"
+              placeholder={videos.length > 0 ? "Or paste a new YouTube URL" : "Paste YouTube video URL"}
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
 
