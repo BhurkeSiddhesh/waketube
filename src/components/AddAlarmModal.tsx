@@ -8,6 +8,8 @@ import { fetchYouTubeTitle } from '../utils/youtube';
 interface AddAlarmModalProps {
   onClose: () => void;
   onSave: (alarm: Omit<Alarm, 'id'>) => void;
+  onUpdate?: (alarm: Alarm) => void;
+  alarm?: Alarm; // If provided, we're editing this alarm
 }
 
 // Get time-based label suggestions
@@ -22,8 +24,11 @@ const getTimeBasedSuggestion = (hour: number): string => {
   return "Late Night Vibes";
 };
 
-const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
+const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate, alarm: editingAlarm }) => {
+  const isEditing = !!editingAlarm;
+
   const [time, setTime] = useState(() => {
+    if (editingAlarm) return editingAlarm.time;
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   });
@@ -31,12 +36,13 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
   const currentHour = new Date().getHours();
   const suggestedLabel = useMemo(() => getTimeBasedSuggestion(currentHour), [currentHour]);
 
-  const [label, setLabel] = useState('');
-  const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/watch?v=7GlsxNI4LVI');
+  const [label, setLabel] = useState(editingAlarm?.label || '');
+  const [videoUrl, setVideoUrl] = useState(editingAlarm?.videoUrl || 'https://www.youtube.com/watch?v=7GlsxNI4LVI');
   const [videoTitle, setVideoTitle] = useState<string | null>(null);
   const [isFetchingTitle, setIsFetchingTitle] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(() => {
+    if (editingAlarm) return editingAlarm.days;
     const today = new Date().getDay() as DayOfWeek;
     return [today];
   });
@@ -73,18 +79,24 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
   };
 
   const handleSave = () => {
-    // Save video to history if we have a title
-    if (videoTitle && videoUrl) {
-      addVideo(videoUrl, videoTitle);
+    // Always save video to history if URL is valid (use title or fallback)
+    if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+      addVideo(videoUrl, videoTitle || 'YouTube Video');
     }
 
-    onSave({
+    const alarmData = {
       time,
       days: selectedDays,
-      enabled: true,
+      enabled: editingAlarm?.enabled ?? true,
       videoUrl,
       label: label || suggestedLabel,
-    });
+    };
+
+    if (isEditing && editingAlarm && onUpdate) {
+      onUpdate({ ...alarmData, id: editingAlarm.id });
+    } else {
+      onSave(alarmData);
+    }
     onClose();
   };
 
@@ -105,8 +117,8 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
               <Clock size={20} className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-body">New Alarm</h2>
-              <p className="text-xs text-gray-500">{suggestedLabel}</p>
+              <h2 className="text-lg font-semibold text-body">{isEditing ? 'Edit Alarm' : 'New Alarm'}</h2>
+              <p className="text-xs text-gray-500">{isEditing ? editingAlarm?.label || 'Modify your alarm' : suggestedLabel}</p>
             </div>
           </div>
           <button
@@ -253,7 +265,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
             onClick={handleSave}
             className="w-full bg-primary hover:bg-primary-light text-white font-medium py-3.5 rounded-xl shadow-md shadow-primary/20 transition-all active:scale-[0.98]"
           >
-            Set Alarm
+            {isEditing ? 'Save Changes' : 'Set Alarm'}
           </button>
         </div>
 

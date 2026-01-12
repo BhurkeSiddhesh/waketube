@@ -16,6 +16,7 @@ const App: React.FC = () => {
   });
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
   const [activeAlarms, setActiveAlarms] = useState<Alarm[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -137,6 +138,20 @@ const App: React.FC = () => {
     setActiveAlarms(prev => prev.filter(a => a.id !== id));
   };
 
+  const updateAlarm = (updatedAlarm: Alarm) => {
+    setAlarms(alarms.map(a => a.id === updatedAlarm.id ? updatedAlarm : a));
+  };
+
+  const openEditModal = (alarm: Alarm) => {
+    setEditingAlarm(alarm);
+    setIsAddModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsAddModalOpen(false);
+    setEditingAlarm(null);
+  };
+
   return (
     <div className="min-h-screen bg-transparent text-body font-sans relative flex flex-col">
 
@@ -218,6 +233,7 @@ const App: React.FC = () => {
                   alarm={alarm}
                   onToggle={toggleAlarm}
                   onDelete={deleteAlarm}
+                  onEdit={openEditModal}
                 />
               ))
             )}
@@ -238,8 +254,10 @@ const App: React.FC = () => {
       {/* Modals & Overlays */}
       {isAddModalOpen && (
         <AddAlarmModal
-          onClose={() => setIsAddModalOpen(false)}
+          onClose={closeModal}
           onSave={addAlarm}
+          onUpdate={updateAlarm}
+          alarm={editingAlarm || undefined}
         />
       )}
 

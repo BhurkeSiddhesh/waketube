@@ -1,15 +1,16 @@
 import React from 'react';
 import { Alarm, DAYS_LABELS, DayOfWeek } from '../types';
-import { Trash2, Play } from 'lucide-react';
+import { Trash2, Play, Pencil } from 'lucide-react';
 import clsx from 'clsx';
 
 interface AlarmCardProps {
   alarm: Alarm;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (alarm: Alarm) => void;
 }
 
-const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete }) => {
+const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit }) => {
   const formatTime = (time: string) => {
     const [h, m] = time.split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
@@ -88,12 +89,22 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete }) => {
             )}></div>
           </label>
 
-          <button
-            onClick={() => onDelete(alarm.id)}
-            className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg"
-          >
-            <Trash2 size={16} />
-          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={() => onEdit(alarm)}
+              className="text-gray-400 hover:text-primary hover:bg-primary/10 transition-all p-2 rounded-lg"
+              data-testid="edit-alarm"
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              onClick={() => onDelete(alarm.id)}
+              className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg"
+              data-testid="delete-alarm"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
