@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
-import { X, Youtube, Music2, Clock } from 'lucide-react';
-import YouTubeSearchModal from './YouTubeSearchModal';
+import { X, Youtube, Clock } from 'lucide-react';
 import clsx from 'clsx';
 
 interface AddAlarmModalProps {
@@ -21,15 +20,6 @@ const getTimeBasedSuggestion = (hour: number): string => {
   return "Late Night Vibes";
 };
 
-// Get suggested YouTube searches based on time
-const getTimeSuggestions = (hour: number): string[] => {
-  if (hour >= 5 && hour < 9) return ["morning music", "wake up songs", "energetic playlist"];
-  if (hour >= 9 && hour < 12) return ["focus music", "productivity", "instrumental"];
-  if (hour >= 12 && hour < 17) return ["lo-fi beats", "chill music", "afternoon vibes"];
-  if (hour >= 17 && hour < 21) return ["relaxing music", "acoustic", "evening chill"];
-  return ["calm music", "sleep sounds", "ambient"];
-};
-
 const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
   const [time, setTime] = useState(() => {
     const now = new Date();
@@ -38,7 +28,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
 
   const currentHour = new Date().getHours();
   const suggestedLabel = useMemo(() => getTimeBasedSuggestion(currentHour), [currentHour]);
-  const timeSuggestions = useMemo(() => getTimeSuggestions(currentHour), [currentHour]);
 
   const [label, setLabel] = useState('');
   const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/watch?v=7GlsxNI4LVI');
@@ -46,7 +35,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
     const today = new Date().getDay() as DayOfWeek;
     return [today];
   });
-  const [showYouTubeSearch, setShowYouTubeSearch] = useState(false);
 
   const toggleDay = (day: DayOfWeek) => {
     if (selectedDays.includes(day)) {
@@ -54,14 +42,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
     } else {
       setSelectedDays([...selectedDays, day].sort());
     }
-  };
-
-  const handleYouTubeSelect = (url: string, title: string) => {
-    setVideoUrl(url);
-    if (!label) {
-      setLabel(title.substring(0, 40));
-    }
-    setShowYouTubeSearch(false);
   };
 
   const handleSave = () => {
@@ -74,16 +54,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
     });
     onClose();
   };
-
-  if (showYouTubeSearch) {
-    return (
-      <YouTubeSearchModal
-        onClose={() => setShowYouTubeSearch(false)}
-        onSelect={handleYouTubeSelect}
-        initialQuery={timeSuggestions[0]}
-      />
-    );
-  }
 
   return (
     <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-0 animate-in fade-in duration-200">
@@ -142,50 +112,22 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
             </div>
           </div>
 
-          {/* YouTube Search Section */}
-          <div className="space-y-3">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Wake-Up Sound</label>
-
-            <button
-              onClick={() => setShowYouTubeSearch(true)}
-              className="w-full glass p-4 rounded-xl border border-borderDim hover:border-primary/50 transition-all flex items-center gap-4 group"
-            >
-              <div className="w-11 h-11 rounded-lg bg-danger flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Youtube size={22} className="text-white" />
-              </div>
-              <div className="text-left flex-1">
-                <p className="font-medium text-body">Browse YouTube</p>
-                <p className="text-xs text-gray-500">Search and select a video</p>
-              </div>
-            </button>
-
-            {/* Quick Suggestions */}
-            <div className="flex flex-wrap gap-2">
-              {timeSuggestions.map((suggestion, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setShowYouTubeSearch(true)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary hover:bg-primary/5 transition-all"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Video URL Display */}
-          <div className="space-y-2 pt-4 border-t border-borderDim">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1">
-              <Music2 size={12} />
-              Selected Video
+          {/* YouTube URL Input */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Youtube size={14} className="text-danger" />
+              YouTube URL
             </label>
             <input
               type="text"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="Paste YouTube URL or search above"
-              className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-gray-500"
+              placeholder="Paste YouTube video URL"
+              className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
+            <p className="text-xs text-gray-400">
+              Paste any YouTube video link to use as your alarm sound
+            </p>
           </div>
 
           {/* Label Input */}

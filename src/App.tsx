@@ -155,7 +155,7 @@ const App: React.FC = () => {
             <WakeTubeIcon className="w-10 h-10 drop-shadow-lg" />
             <div>
               <h1 className="text-xl font-bold tracking-tight text-body">WakeTube</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">AI-Powered Alarm</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">YouTube Alarm Clock</p>
             </div>
           </div>
 

@@ -34,9 +34,17 @@ const AlarmTrigger: React.FC<AlarmTriggerProps> = ({ alarm, onDismiss }) => {
 
   // Load YouTube IFrame API
   useEffect(() => {
+    let isMounted = true;
+
+    const initPlayerIfMounted = () => {
+      if (isMounted) {
+        initPlayer();
+      }
+    };
+
     // Check if API is already loaded
     if ((window as any).YT && (window as any).YT.Player) {
-      initPlayer();
+      initPlayerIfMounted();
       return;
     }
 
@@ -48,10 +56,11 @@ const AlarmTrigger: React.FC<AlarmTriggerProps> = ({ alarm, onDismiss }) => {
 
     // Wait for API to be ready
     (window as any).onYouTubeIframeAPIReady = () => {
-      initPlayer();
+      initPlayerIfMounted();
     };
 
     return () => {
+      isMounted = false;
       if (playerRef.current) {
         playerRef.current.destroy();
       }
