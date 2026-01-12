@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
-import { X, Youtube, Clock } from 'lucide-react';
+import { X, Youtube, Clock, Loader2, History, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
+import { useVideoHistory } from '../hooks/useVideoHistory';
+import { fetchYouTubeTitle } from '../utils/youtube';
 
 interface AddAlarmModalProps {
   onClose: () => void;
@@ -31,10 +33,36 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
 
   const [label, setLabel] = useState('');
   const [videoUrl, setVideoUrl] = useState('https://www.youtube.com/watch?v=7GlsxNI4LVI');
+  const [videoTitle, setVideoTitle] = useState<string | null>(null);
+  const [isFetchingTitle, setIsFetchingTitle] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(() => {
     const today = new Date().getDay() as DayOfWeek;
     return [today];
   });
+
+  const { videos, addVideo, removeVideo } = useVideoHistory();
+
+  // Fetch title when URL changes (debounced)
+  const fetchTitle = useCallback(async (url: string) => {
+    if (!url || (!url.includes('youtube.com') && !url.includes('youtu.be'))) {
+      setVideoTitle(null);
+      return;
+    }
+
+    setIsFetchingTitle(true);
+    const title = await fetchYouTubeTitle(url);
+    setVideoTitle(title);
+    setIsFetchingTitle(false);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTitle(videoUrl);
+    }, 500); // Debounce 500ms
+
+    return () => clearTimeout(timer);
+  }, [videoUrl, fetchTitle]);
 
   const toggleDay = (day: DayOfWeek) => {
     if (selectedDays.includes(day)) {
@@ -45,6 +73,11 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
   };
 
   const handleSave = () => {
+    // Save video to history if we have a title
+    if (videoTitle && videoUrl) {
+      addVideo(videoUrl, videoTitle);
+    }
+
     onSave({
       time,
       days: selectedDays,
@@ -53,6 +86,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
       label: label || suggestedLabel,
     });
     onClose();
+  };
+
+  const selectFromHistory = (url: string, title: string) => {
+    setVideoUrl(url);
+    setVideoTitle(title);
+    setShowHistory(false);
   };
 
   return (
@@ -115,10 +154,58 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
 
           {/* YouTube URL Input */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Youtube size={14} className="text-danger" />
-              YouTube URL
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Youtube size={14} className="text-danger" />
+                YouTube URL
+              </label>
+              {videos.length > 0 && (
+                <button
+                  onClick={() => setShowHistory(!showHistory)}
+                  className={clsx(
+                    "text-xs flex items-center gap-1 px-2 py-1 rounded-md transition-all",
+                    showHistory
+                      ? "bg-primary text-white"
+                      : "text-gray-500 hover:text-body hover:bg-gray-100 dark:hover:bg-gray-800"
+                  )}
+                  data-testid="history-toggle"
+                >
+                  <History size={12} />
+                  Recent
+                </button>
+              )}
+            </div>
+
+            {/* Recently Used Videos Dropdown */}
+            {showHistory && videos.length > 0 && (
+              <div className="glass rounded-lg border border-borderDim max-h-32 overflow-y-auto" data-testid="video-history">
+                {videos.map((video) => (
+                  <div
+                    key={video.url}
+                    className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group"
+                  >
+                    <button
+                      onClick={() => selectFromHistory(video.url, video.title)}
+                      className="flex-1 text-left text-sm text-body truncate pr-2"
+                      data-testid="history-item"
+                    >
+                      {video.title}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeVideo(video.url);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-danger transition-all p-1 rounded"
+                      data-testid="remove-history-item"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <input
               type="text"
               value={videoUrl}
@@ -126,9 +213,24 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
               placeholder="Paste YouTube video URL"
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
-            <p className="text-xs text-gray-400">
-              Paste any YouTube video link to use as your alarm sound
-            </p>
+
+            {/* Title Display */}
+            <div className="flex items-center gap-2 min-h-[20px]">
+              {isFetchingTitle ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Loader2 size={12} className="animate-spin" />
+                  Fetching title...
+                </div>
+              ) : videoTitle ? (
+                <p className="text-xs text-primary truncate" data-testid="video-title">
+                  📺 {videoTitle}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400">
+                  Paste any YouTube video link to use as your alarm sound
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Label Input */}

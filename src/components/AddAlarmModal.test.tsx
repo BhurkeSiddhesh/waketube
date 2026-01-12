@@ -79,15 +79,18 @@ describe('AddAlarmModal', () => {
     });
     describe('day selection', () => {
         it('toggles day selection (add and remove)', async () => {
+            // Mock to Monday so Tuesday is unselected initially
+            vi.setSystemTime(new Date(2024, 0, 1, 10, 0, 0)); // Jan 1, 2024 is Monday
+
             const user = userEvent.setup();
             render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
 
             const tuesdayBtn = screen.getByTestId('day-toggle-2'); // Tuesday
 
-            // Tuesday should be unselected initially
+            // Tuesday should be unselected initially (Monday is selected)
             expect(tuesdayBtn).not.toHaveClass('bg-primary');
 
-            // Click to add
+            // Click to add Tuesday
             fireEvent.click(tuesdayBtn);
 
             // Verify added
@@ -95,11 +98,13 @@ describe('AddAlarmModal', () => {
                 expect(tuesdayBtn).toHaveClass('bg-primary');
             });
 
-            // Verify via save
+            // Verify via save - Monday (1) and Tuesday (2) should both be selected
             fireEvent.click(screen.getByText('Set Alarm'));
             expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({
                 days: [DayOfWeek.Monday, DayOfWeek.Tuesday] // Sorts to [1, 2]
             }));
+
+            vi.useRealTimers();
         });
 
         it('removes a selected day', async () => {

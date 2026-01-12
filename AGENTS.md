@@ -27,6 +27,8 @@
 - **Mesh Gradients**: Subtle background effects using radial gradients.
 - **Atomic Components**: Components separated into functional units (`AlarmCard`, `AddAlarmModal`, etc.).
 - **Mocking**: Extensive use of `vi.fn()` and `vi.setSystemTime()` in tests.
+- **YouTube Title Fetching**: Using oEmbed API in `src/utils/youtube.ts` to retrieve video titles without API keys.
+- **Video History**: `useVideoHistory` hook in `src/hooks/useVideoHistory.ts` for Recently Used videos with localStorage persistence (max 10 items).
 
 ## Discrepancies with old README
 - **AI Discovery**: Removed or disabled in the current codebase (previously used Gemini).
