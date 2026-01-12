@@ -98,6 +98,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave }) => {
               {DAYS_LABELS.map((dayLabel, idx) => (
                 <button
                   key={idx}
+                  data-testid={`day-toggle-${idx}`}
                   onClick={() => toggleDay(idx as DayOfWeek)}
                   className={clsx(
                     "flex-1 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all",

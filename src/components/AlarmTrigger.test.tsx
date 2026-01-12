@@ -112,9 +112,69 @@ describe('AlarmTrigger', () => {
     });
 
     describe('YouTube player initialization', () => {
-        it('creates YouTube player', () => {
+        it('creates YouTube player when API is already loaded', () => {
             render(<AlarmTrigger alarm={mockAlarm} onDismiss={onDismiss} />);
             expect((window as any).YT.Player).toHaveBeenCalled();
+        });
+
+        it('loads API script if not present', async () => {
+            // Remove mock API
+            const originalYT = (window as any).YT;
+            delete (window as any).YT;
+
+            render(<AlarmTrigger alarm={mockAlarm} onDismiss={onDismiss} />);
+
+            // Check if script tag was added
+            const scripts = document.head.getElementsByTagName('script'); // AlarmTrigger appends to head or before first script?
+            // Code uses: firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+            // In JSDOM, we can check document.getElementsByTagName('script')
+            const scriptTags = document.getElementsByTagName('script');
+            const ytScript = Array.from(scriptTags).find(s => s.src === 'https://www.youtube.com/iframe_api');
+            expect(ytScript).toBeDefined();
+
+            // Simulate API ready
+            (window as any).YT = originalYT;
+            act(() => {
+                if ((window as any).onYouTubeIframeAPIReady) {
+                    (window as any).onYouTubeIframeAPIReady();
+                }
+            });
+
+            expect((window as any).YT.Player).toHaveBeenCalled();
+        });
+
+        it('injects API script before existing script', () => {
+            // Remove mock API
+            const originalYT = (window as any).YT;
+            delete (window as any).YT;
+
+            // Add dummy script
+            const dummyScript = document.createElement('script');
+            document.body.appendChild(dummyScript);
+
+            render(<AlarmTrigger alarm={mockAlarm} onDismiss={onDismiss} />);
+
+            const scriptTags = document.getElementsByTagName('script');
+            const ytScript = Array.from(scriptTags).find(s => s.src === 'https://www.youtube.com/iframe_api');
+            expect(ytScript).toBeDefined();
+
+            // Cleanup
+            document.body.removeChild(dummyScript);
+            (window as any).YT = originalYT;
+        });
+
+        it('handles YouTube player errors', () => {
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+            render(<AlarmTrigger alarm={mockAlarm} onDismiss={() => { }} />);
+
+            // Access the player configuration passed to the constructor
+            const playerConfig = (window as any).YT.Player.mock.calls[0][1];
+
+            // Simulate error
+            playerConfig.events.onError({ data: 101 });
+
+            expect(consoleSpy).toHaveBeenCalledWith('YouTube player error:', 101);
+            consoleSpy.mockRestore();
         });
 
         it('extracts correct video ID from standard URL', () => {

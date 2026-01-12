@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 import { DayOfWeek } from './types';
@@ -172,6 +172,137 @@ describe('App', () => {
                 await user.click(deleteBtn);
                 expect(screen.getByText('No alarms set')).toBeInTheDocument();
             }
+        });
+    });
+
+    describe('wake lock', () => {
+        it('handles wake lock request errors', async () => {
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+            // Mock request to throw
+            const lockRequest = vi.fn().mockRejectedValue(new Error('Unknown error'));
+            Object.defineProperty(navigator, 'wakeLock', {
+                value: { request: lockRequest },
+                writable: true
+            });
+
+            render(<App />);
+            await waitFor(() => {
+                expect(consoleSpy).toHaveBeenCalledWith('Wake Lock request failed:', expect.any(Error));
+            });
+            consoleSpy.mockRestore();
+        });
+
+        it('ignores AbortError', async () => {
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+            const error = new Error('AbortError');
+            error.name = 'AbortError';
+            const lockRequest = vi.fn().mockRejectedValue(error);
+            Object.defineProperty(navigator, 'wakeLock', {
+                value: { request: lockRequest },
+                writable: true
+            });
+
+            render(<App />);
+            // Should verify it eventually settles without warning
+            await new Promise(resolve => setTimeout(resolve, 0));
+            expect(consoleSpy).not.toHaveBeenCalled();
+            consoleSpy.mockRestore();
+        });
+
+        it('ignores policy errors', async () => {
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+            const error = new Error('NotAllowedError');
+            error.name = 'NotAllowedError';
+            const lockRequest = vi.fn().mockRejectedValue(error);
+            Object.defineProperty(navigator, 'wakeLock', {
+                value: { request: lockRequest },
+                writable: true
+            });
+
+            render(<App />);
+            await new Promise(resolve => setTimeout(resolve, 0));
+            expect(consoleSpy).not.toHaveBeenCalled();
+            consoleSpy.mockRestore();
+        });
+
+        it('rerequest wake lock on visibility change', async () => {
+            const requestMock = vi.fn().mockResolvedValue({ release: vi.fn() });
+            Object.defineProperty(navigator, 'wakeLock', {
+                value: { request: requestMock },
+                writable: true
+            });
+            Object.defineProperty(document, 'visibilityState', {
+                value: 'visible',
+                writable: true
+            });
+
+            render(<App />);
+            expect(requestMock).toHaveBeenCalledTimes(1);
+
+            // Simulate hiding then showing
+            fireEvent(document, new Event('visibilitychange'));
+
+            // Need to wait for async effect
+            await waitFor(() => {
+                expect(requestMock).toHaveBeenCalledTimes(2);
+            });
+        });
+    });
+
+    describe('alarm triggering', () => {
+        beforeEach(() => {
+            vi.useFakeTimers({ shouldAdvanceTime: true });
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('triggers alarm when time matches', async () => {
+            // Set time to something specific
+            const now = new Date(2024, 0, 1, 8, 59, 0);
+            vi.setSystemTime(now);
+
+            // Mock localStorage to already have an alarm set for 9:00 (1 min later)
+            const alarmId = 'test-alarm-id';
+            const upcomingAlarm = {
+                id: alarmId,
+                time: '09:00',
+                days: [DayOfWeek.Monday], // Jan 1 2024 is Monday
+                enabled: true,
+                videoUrl: 'https://youtube.com/watch?v=123',
+                label: 'Test Alarm',
+            };
+
+            vi.spyOn(window.localStorage, 'getItem').mockImplementation((key) => {
+                if (key === 'waketube-alarms') return JSON.stringify([upcomingAlarm]);
+                return null;
+            });
+
+            render(<App />);
+
+            // Fast forward time by 1 minute + buffer in steps to ensure interaction
+            await act(async () => {
+                vi.advanceTimersByTime(65000);
+            });
+
+            const alarmElements = screen.getAllByText('WAKE UP!');
+            expect(alarmElements.length).toBeGreaterThan(0);
+
+            // Dismiss the alarm
+            // Advance time to ensure dismiss button appears (3s delay)
+            act(() => {
+                vi.advanceTimersByTime(5000);
+            });
+
+            // Dismiss the alarm
+            const dismissBtn = screen.getAllByRole('button', { name: /dismiss/i })[0];
+            fireEvent.click(dismissBtn);
+
+            // Verify it's gone
+            await waitFor(() => {
+                expect(screen.queryByText('WAKE UP!')).not.toBeInTheDocument();
+            });
         });
     });
 
