@@ -183,7 +183,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                   className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-white dark:bg-gray-800 cursor-pointer"
                   data-testid="video-select"
                 >
-                  <option value="" disabled className="bg-white dark:bg-gray-800 text-body">📹 Recent Videos ({videos.length})</option>
+                  <option value="" disabled hidden className="bg-white dark:bg-gray-800 text-body">📹 Recent Videos ({videos.length})</option>
                   {videos.map((video) => (
                     <option key={video.url} value={video.url} className="bg-white dark:bg-gray-800 text-body">
                       {video.title}
