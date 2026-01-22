@@ -1,12 +1,17 @@
-# Task: Update README.md
+# Task: Merge `android-progress` into `main`
 
-Update the README to accurately reflect the latest changes in the codebase, including the updated tech stack, UI features, and removal of AI discovery if applicable.
+Merge the current development branch (`android-progress`) into the `main` branch, ensuring all tests pass and documentation is updated.
 
 ## Todo
-- [x] Research and verify all current features vs old README. <!-- id: 0 -->
-- [x] Create draft of updated README content. <!-- id: 1 -->
-- [x] Update `README.md` with new content. <!-- id: 2 -->
-- [x] Verify `AGENTS.md` matches the updated README. <!-- id: 3 -->
+- [x] Verify current branch is `android-progress` and sync with remote if needed. <!-- id: 0 -->
+- [x] Run full test suite on `android-progress`. <!-- id: 1 -->
+- [x] Check for any uncommitted changes. <!-- id: 2 -->
+- [x] Switch to `main` branch. <!-- id: 3 -->
+- [x] Merge `android-progress` into `main`. <!-- id: 4 -->
+- [x] Run full test suite on `main` after merge. <!-- id: 5 -->
+- [x] Update `AGENTS.md` Change Log. <!-- id: 6 -->
+- [x] Commit and push (if applicable). <!-- id: 7 -->
 
 ## Verification Method
-- Compare updated README with `App.tsx`, `index.html`, and `AlarmTrigger.tsx` to ensure all described features exist.
+- `npm run test:coverage` results.
+- Successful `git merge` execution.

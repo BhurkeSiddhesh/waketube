@@ -33,3 +33,9 @@
 ## Discrepancies with old README
 - **AI Discovery**: Removed or disabled in the current codebase (previously used Gemini).
 - **Video Player**: Switched from `react-player` to native YouTube IFrame API in `AlarmTrigger.tsx`.
+
+## Change Log (Reverse Chronological)
+### 2026-01-22
+- **feat**: Merged `android-progress` branch into `main`.
+- **Files**: Merged multiple files including Capacitor configuration and Android project files.
+- **Verification**: Ran `npm run test` (82 tests passed).
