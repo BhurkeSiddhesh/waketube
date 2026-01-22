@@ -7,6 +7,7 @@
 - **State Management**: Centralized in `App.tsx` using `useState` and `useEffect`.
 - **Persistence**: `localStorage` for alarms and theme settings.
 - **Entry Point**: `src/index.tsx` (Vite-based).
+- **Native Platforms**: Capacitor 7 with Android and iOS support.
 
 ## Key Features (Observed)
 1. **Glassmorphic UI**: High-end design with mesh gradients, translucent cards, and smooth animations.
@@ -16,11 +17,13 @@
 5. **Theme Support**: Dark and Light modes with system persistence.
 6. **Smart Suggestions**: Adaptive alarm labels based on the time of day.
 7. **Comprehensive Testing**: Vitest + React Testing Library with high coverage for $App$, $AddAlarmModal$, $AlarmCard$, and $AlarmTrigger$.
+8. **Background Alarms**: Native AlarmManager (Android) and UNUserNotificationCenter (iOS) for alarms that work even when app is closed.
 
 ## Tech Stack Detail
 - **Icons**: `lucide-react`
 - **Player**: Native YouTube IFrame API (previously `react-player` mentioned in README but native API observed in `AlarmTrigger.tsx`).
 - **Testing**: Vitest, `@testing-library/react`, `jsdom`.
+- **Native Alarms**: Custom Capacitor plugin `AlarmScheduler` for Android/iOS.
 
 ## Observed Implementation Patterns
 - **Glassmorphism**: Use of `.glass`, `.glass-strong`, and `.glass-subtle` classes defined in `index.html`.
@@ -29,7 +32,26 @@
 - **Mocking**: Extensive use of `vi.fn()` and `vi.setSystemTime()` in tests.
 - **YouTube Title Fetching**: Using oEmbed API in `src/utils/youtube.ts` to retrieve video titles without API keys.
 - **Video History**: `useVideoHistory` hook in `src/hooks/useVideoHistory.ts` for Recently Used videos with localStorage persistence (max 10 items).
+- **Native Plugin Bridge**: TypeScript wrapper in `src/plugins/AlarmScheduler.ts` with web fallback.
 
 ## Discrepancies with old README
 - **AI Discovery**: Removed or disabled in the current codebase (previously used Gemini).
 - **Video Player**: Switched from `react-player` to native YouTube IFrame API in `AlarmTrigger.tsx`.
+
+## Change Log (Reverse Chronological)
+
+### 2026-01-22
+- **feat**: Background Alarm Service - Alarms now trigger even when app is closed
+- **Files**: 
+  - `android/app/src/main/java/com/waketube/app/AlarmSchedulerPlugin.kt`
+  - `android/app/src/main/java/com/waketube/app/AlarmReceiver.kt`
+  - `android/app/src/main/java/com/waketube/app/BootReceiver.kt`
+  - `android/app/src/main/java/com/waketube/app/MainActivity.kt`
+  - `android/app/src/main/AndroidManifest.xml`
+  - `ios/App/App/AlarmSchedulerPlugin.swift`
+  - `ios/App/App/AppDelegate.swift`
+  - `src/plugins/AlarmScheduler.ts`
+  - `src/types.ts`
+  - `src/App.tsx`
+- **Verification**: `npm test` - 82 tests passed
+

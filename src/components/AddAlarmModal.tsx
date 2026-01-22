@@ -102,7 +102,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
   const selectFromHistory = (url: string, title: string) => {
     setVideoUrl(url);
     setVideoTitle(title);
-    setShowHistory(false);
   };
 
   return (
@@ -181,12 +180,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                       selectFromHistory(video.url, video.title);
                     }
                   }}
-                  className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-transparent cursor-pointer"
+                  className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-white dark:bg-gray-800 cursor-pointer"
                   data-testid="video-select"
                 >
-                  <option value="" disabled>📚 Choose from saved videos ({videos.length})</option>
+                  <option value="" disabled className="bg-white dark:bg-gray-800 text-body">📹 Recent Videos ({videos.length})</option>
                   {videos.map((video) => (
-                    <option key={video.url} value={video.url}>
+                    <option key={video.url} value={video.url} className="bg-white dark:bg-gray-800 text-body">
                       {video.title}
                     </option>
                   ))}
