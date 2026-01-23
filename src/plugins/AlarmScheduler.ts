@@ -151,12 +151,8 @@ export const AlarmScheduler = {
                     }
                 }
 
-                // Check battery optimization
-                const batteryPerm = await AlarmSchedulerNative.checkBatteryOptimization();
-                if (!batteryPerm.isIgnoringOptimizations) {
-                    // Prompt user but don't block
-                    await AlarmSchedulerNative.requestIgnoreBatteryOptimization();
-                }
+                // Note: Battery optimization is NOT requested on startup
+                // It can be requested later via requestBatteryOptimization() if needed
 
                 return true;
             }
