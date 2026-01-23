@@ -17,6 +17,9 @@ class MainActivity : BridgeActivity() {
         
         super.onCreate(savedInstanceState)
         
+        // Clear WebView cache to ensure fresh web assets load
+        bridge?.webView?.clearCache(true)
+        
         // Enable autoplay for YouTube video alarm
         bridge?.webView?.settings?.mediaPlaybackRequiresUserGesture = false
 
