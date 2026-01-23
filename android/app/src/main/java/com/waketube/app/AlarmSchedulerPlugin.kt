@@ -152,6 +152,30 @@ class AlarmSchedulerPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun getAlarms(call: PluginCall) {
+        try {
+            val alarms = getStoredAlarms()
+            val ret = JSObject()
+            // Convert JSONArray to a format Capacitor can easily return to JS
+            val alarmList = mutableListOf<JSObject>()
+            for (i in 0 until alarms.length()) {
+                val alarm = alarms.getJSONObject(i)
+                val jsAlarm = JSObject()
+                jsAlarm.put("id", alarm.getString("id"))
+                jsAlarm.put("timestampMs", alarm.getLong("timestampMs"))
+                jsAlarm.put("label", alarm.getString("label"))
+                jsAlarm.put("youtubeUrl", alarm.getString("youtubeUrl"))
+                alarmList.add(jsAlarm)
+            }
+            ret.put("alarms", com.getcapacitor.JSArray(alarmList))
+            call.resolve(ret)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get alarms", e)
+            call.reject("Failed to get alarms: ${e.message}")
+        }
+    }
+
+    @PluginMethod
     fun checkExactAlarmPermission(call: PluginCall) {
         val ret = JSObject()
         
