@@ -129,15 +129,38 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
         <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto no-scrollbar">
 
-          {/* Time Input */}
+          {/* Time Input - Custom Dropdowns */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time</label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full glass text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body"
-            />
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <select
+                  value={time.split(':')[0]}
+                  onChange={(e) => setTime(`${e.target.value}:${time.split(':')[1]}`)}
+                  className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
+                  style={{ textAlignLast: 'center' }}
+                >
+                  {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(hour => (
+                    <option key={hour} value={hour} className="text-body bg-white dark:bg-gray-800">{hour}</option>
+                  ))}
+                </select>
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-gray-400 text-xs font-bold">HR</div>
+              </div>
+              <div className="text-4xl sm:text-5xl font-mono flex items-center text-gray-400">:</div>
+              <div className="flex-1 relative">
+                <select
+                  value={time.split(':')[1]}
+                  onChange={(e) => setTime(`${time.split(':')[0]}:${e.target.value}`)}
+                  className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
+                  style={{ textAlignLast: 'center' }}
+                >
+                  {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(minute => (
+                    <option key={minute} value={minute} className="text-body bg-white dark:bg-gray-800">{minute}</option>
+                  ))}
+                </select>
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-gray-400 text-xs font-bold">MIN</div>
+              </div>
+            </div>
           </div>
 
           {/* Days Selection */}

@@ -59,18 +59,11 @@ const App: React.FC = () => {
   // Track if running in native mode (background alarms supported)
   const [isNativeMode, setIsNativeMode] = useState(false);
 
-  // Initialize native mode and permissions
+  // Initialize native mode detection (no permission requests on startup)
   useEffect(() => {
-    const initNative = async () => {
-      const isNative = AlarmScheduler.isNativeMode();
-      setIsNativeMode(isNative);
-
-      if (isNative) {
-        // Request necessary permissions
-        await AlarmScheduler.ensurePermissions();
-      }
-    };
-    initNative();
+    const isNative = AlarmScheduler.isNativeMode();
+    setIsNativeMode(isNative);
+    console.log('[App] Native mode:', isNative, 'Platform:', AlarmScheduler.getPlatform());
   }, []);
 
   // Listen for native alarm triggers

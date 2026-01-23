@@ -15,17 +15,18 @@ class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "AlarmReceiver"
-        private const val WAKE_LOCK_TIMEOUT = 10000L // 10 seconds
+        private const val WAKE_LOCK_TIMEOUT = 60000L // 1 minute (increased)
+        private const val CHANNEL_ID = "waketube_alarm_channel"
+        private const val NOTIFICATION_ID = 12345
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         val alarmId = intent.getStringExtra("alarm_id") ?: return
-        val alarmLabel = intent.getStringExtra("alarm_label") ?: ""
+        val alarmLabel = intent.getStringExtra("alarm_label") ?: "Alarm"
         val youtubeUrl = intent.getStringExtra("alarm_youtube_url") ?: ""
 
         Log.d(TAG, "Alarm triggered: $alarmId - $alarmLabel")
 
-        // Acquire a wake lock to ensure the device stays awake
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
@@ -34,8 +35,8 @@ class AlarmReceiver : BroadcastReceiver() {
         wakeLock.acquire(WAKE_LOCK_TIMEOUT)
 
         try {
-            // Create intent to launch MainActivity with alarm data
-            val launchIntent = Intent(context, MainActivity::class.java).apply {
+            // Create intent to launch MainActivity
+            val fullScreenIntent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or
                         Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -45,20 +46,48 @@ class AlarmReceiver : BroadcastReceiver() {
                 action = "com.waketube.app.ALARM_TRIGGERED"
             }
 
-            // For Android 10+, we need special handling for background starts
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Use full-screen intent for time-critical alarms
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            val pendingIntent = android.app.PendingIntent.getActivity(
+                context,
+                alarmId.hashCode(),
+                fullScreenIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+
+            // Create notification channel
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = android.app.NotificationChannel(
+                    CHANNEL_ID,
+                    "Alarm Notifications",
+                    android.app.NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "Shows when alarm goes off"
+                    lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                    setSound(null, null) // Silent because app handles sound
+                    enableVibration(true)
+                }
+                notificationManager.createNotificationChannel(channel)
             }
 
-            context.startActivity(launchIntent)
+            // Build high-priority notification
+            val builder = androidx.core.app.NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentTitle("WakeTube Alarm")
+                .setContentText(alarmLabel)
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_MAX)
+                .setCategory(androidx.core.app.NotificationCompat.CATEGORY_ALARM)
+                .setFullScreenIntent(pendingIntent, true) // CRITICAL: This launches the activity
+                .setAutoCancel(true)
+                .setOngoing(true)
 
-            Log.d(TAG, "Launched MainActivity for alarm: $alarmId")
+            // Post notification
+            notificationManager.notify(NOTIFICATION_ID, builder.build())
+
+            Log.d(TAG, "Posted full-screen notification for alarm: $alarmId")
 
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to launch activity for alarm", e)
+            Log.e(TAG, "Failed to handle alarm receive", e)
         } finally {
-            // Wake lock will be released after timeout or explicitly if needed
             if (wakeLock.isHeld) {
                 wakeLock.release()
             }

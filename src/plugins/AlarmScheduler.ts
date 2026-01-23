@@ -132,6 +132,7 @@ export const AlarmScheduler = {
     /**
      * Check and request necessary permissions
      * Returns true if all needed permissions are granted
+     * NOTE: This only CHECKS permissions, does not open settings
      */
     async ensurePermissions(): Promise<boolean> {
         if (!isNative()) {
@@ -140,31 +141,16 @@ export const AlarmScheduler = {
 
         try {
             if (isAndroid()) {
-                // Check exact alarm permission (Android 12+)
+                // Only CHECK exact alarm permission, don't open settings
                 const alarmPerm = await AlarmSchedulerNative.checkExactAlarmPermission();
-                if (!alarmPerm.granted) {
-                    await AlarmSchedulerNative.requestExactAlarmPermission();
-                    // User needs to manually enable, check again after
-                    const recheckAlarm = await AlarmSchedulerNative.checkExactAlarmPermission();
-                    if (!recheckAlarm.granted) {
-                        return false;
-                    }
-                }
-
-                // Note: Battery optimization is NOT requested on startup
-                // It can be requested later via requestBatteryOptimization() if needed
-
-                return true;
+                // Return current permission status - don't open settings on startup
+                return alarmPerm.granted;
             }
 
             if (isIOS()) {
-                // Check notification permission
+                // Check notification permission (iOS handles this differently)
                 if (AlarmSchedulerNative.checkNotificationPermission) {
                     const notifPerm = await AlarmSchedulerNative.checkNotificationPermission();
-                    if (!notifPerm.granted && AlarmSchedulerNative.requestNotificationPermission) {
-                        const result = await AlarmSchedulerNative.requestNotificationPermission();
-                        return result.granted;
-                    }
                     return notifPerm.granted;
                 }
             }
@@ -172,6 +158,41 @@ export const AlarmScheduler = {
             return true;
         } catch (error) {
             console.error('[AlarmScheduler] Permission check failed:', error);
+            return true; // Don't block app on error
+        }
+    },
+
+    /**
+     * Request permissions - opens settings if needed
+     * Call this when user tries to schedule an alarm
+     */
+    async requestPermissions(): Promise<boolean> {
+        if (!isNative()) {
+            return true;
+        }
+
+        try {
+            if (isAndroid()) {
+                const alarmPerm = await AlarmSchedulerNative.checkExactAlarmPermission();
+                if (!alarmPerm.granted) {
+                    await AlarmSchedulerNative.requestExactAlarmPermission();
+                    // Re-check after user returns from settings
+                    const recheck = await AlarmSchedulerNative.checkExactAlarmPermission();
+                    return recheck.granted;
+                }
+                return true;
+            }
+
+            if (isIOS()) {
+                if (AlarmSchedulerNative.requestNotificationPermission) {
+                    const result = await AlarmSchedulerNative.requestNotificationPermission();
+                    return result.granted;
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[AlarmScheduler] Permission request failed:', error);
             return false;
         }
     },

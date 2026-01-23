@@ -17,6 +17,9 @@ class MainActivity : BridgeActivity() {
         
         super.onCreate(savedInstanceState)
         
+        // Enable autoplay for YouTube video alarm
+        bridge?.webView?.settings?.mediaPlaybackRequiresUserGesture = false
+
         // Handle alarm trigger intent
         handleAlarmIntent(intent)
     }

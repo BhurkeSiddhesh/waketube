@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme Variables - Clean Google Style */
+:root {
+  --bg-main: #ffffff;
+  --bg-surface: rgba(255, 255, 255, 0.9);
+  --text-body: #202124;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.06);
+}
+
+.dark {
+  --bg-main: #1f1f1f;
+  --bg-surface: rgba(40, 40, 40, 0.9);
+  --text-body: #e8eaed;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(40, 40, 40, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.06);
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-strong {
+  background: var(--bg-surface);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-subtle {
+  background: rgba(128, 128, 128, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 115, 232, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 115, 232, 0.5);
+}
+
+/* Smooth mesh gradient - subtle */
+.mesh-gradient {
+  background:
+    radial-gradient(at 20% 20%, rgba(26, 115, 232, 0.08) 0px, transparent 50%),
+    radial-gradient(at 80% 20%, rgba(52, 168, 83, 0.06) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(26, 115, 232, 0.06) 0px, transparent 50%);
+}
+
+.dark .mesh-gradient {
+  background:
+    radial-gradient(at 20% 20%, rgba(66, 133, 244, 0.12) 0px, transparent 50%),
+    radial-gradient(at 80% 20%, rgba(52, 168, 83, 0.08) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(66, 133, 244, 0.08) 0px, transparent 50%);
+}

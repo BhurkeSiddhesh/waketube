@@ -41,6 +41,22 @@
 ## Change Log (Reverse Chronological)
 
 ### 2026-01-23
+- **refactor**: Replaced native Android time picker with custom Hour/Minute dropdowns for precise and easy selection (restoring webapp UX).
+- **fix**: Enabled `mediaPlaybackRequiresUserGesture = false` in Android WebView to allow video alarms to autoplay without user interaction.
+- **fix**: Upgraded Android alarm triggering to use High-Priority Notifications with Full-Screen Intents, ensuring reliability on Android 10+ when the app is closed/locked.
+- **refactor**: Migrated from Tailwind CDN to local installation to fix broken UI on Android and enable offline support.
+- **fix**: Fixed "Blank Screen" (app icon only) issue on Android by setting `base: './'` in `vite.config.ts` and removing conflicting CDN importmaps.
+- **fix**: Fixed Android app opening battery usage settings on startup by removing automatic permission checks.
+- **fix**: Fixed Android build errors by adding missing Kotlin Gradle plugin.
+- **Files**:
+  - `src/plugins/AlarmScheduler.ts`
+  - `src/App.tsx`
+  - `src/App.test.tsx`
+  - `android/build.gradle`
+  - `android/app/build.gradle`
+- **Verification**: `npm test` - 24 tests passed (including new startup behavior tests), `npx cap sync android` successful.
+
+### 2026-01-23
 - **feat**: Added Android native assets, splash screen, and theme configuration
 - **Files**:
   - `android/app/src/main/res/drawable/ic_launcher_background.xml`
