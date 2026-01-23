@@ -20,8 +20,12 @@ class MainActivity : BridgeActivity() {
         // Clear WebView cache to ensure fresh web assets load
         bridge?.webView?.clearCache(true)
         
-        // Enable autoplay for YouTube video alarm
-        bridge?.webView?.settings?.mediaPlaybackRequiresUserGesture = false
+        // Critical settings for Video and LocalStorage
+         bridge?.webView?.settings?.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            mediaPlaybackRequiresUserGesture = false
+        }
 
         // Handle alarm trigger intent
         handleAlarmIntent(intent)

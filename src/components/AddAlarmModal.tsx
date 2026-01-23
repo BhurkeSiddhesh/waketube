@@ -192,29 +192,30 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               YouTube Video
             </label>
 
-            {/* Saved Videos Dropdown - Always visible when videos exist */}
-            {videos.length > 0 && (
-              <div className="space-y-2">
-                <select
-                  value=""
-                  onChange={(e) => {
-                    const video = videos.find(v => v.url === e.target.value);
-                    if (video) {
-                      selectFromHistory(video.url, video.title);
-                    }
-                  }}
-                  className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-white dark:bg-gray-800 cursor-pointer"
-                  data-testid="video-select"
-                >
-                  <option value="" disabled hidden className="bg-white dark:bg-gray-800 text-body">📹 Recent Videos ({videos.length})</option>
-                  {videos.map((video) => (
-                    <option key={video.url} value={video.url} className="bg-white dark:bg-gray-800 text-body">
-                      {video.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* Saved Videos Dropdown - Always visible for debugging/verification */}
+            <div className="space-y-2">
+              <select
+                value=""
+                onChange={(e) => {
+                  const video = videos.find(v => v.url === e.target.value);
+                  if (video) {
+                    selectFromHistory(video.url, video.title);
+                  }
+                }}
+                className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-white dark:bg-gray-800 cursor-pointer"
+                data-testid="video-select"
+                disabled={videos.length === 0}
+              >
+                <option value="" disabled hidden className="bg-white dark:bg-gray-800 text-body">
+                  {videos.length > 0 ? `📹 Recent Videos (${videos.length})` : "ℹ️ No saved videos yet"}
+                </option>
+                {videos.map((video) => (
+                  <option key={video.url} value={video.url} className="bg-white dark:bg-gray-800 text-body">
+                    {video.title}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* URL Input */}
             <input
