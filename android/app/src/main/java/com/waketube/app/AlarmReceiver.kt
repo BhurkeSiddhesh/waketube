@@ -29,7 +29,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = powerManager.newWakeLock(
-            PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "WakeTube::AlarmWakeLock"
         )
         wakeLock.acquire(WAKE_LOCK_TIMEOUT)
@@ -46,11 +46,18 @@ class AlarmReceiver : BroadcastReceiver() {
                 action = "com.waketube.app.ALARM_TRIGGERED"
             }
 
+            // For activities that handle extras from fullScreenIntent, FLAG_MUTABLE is often safer/needed
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_MUTABLE
+            } else {
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT
+            }
+
             val pendingIntent = android.app.PendingIntent.getActivity(
                 context,
                 alarmId.hashCode(),
                 fullScreenIntent,
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                flags
             )
 
             // Create notification channel

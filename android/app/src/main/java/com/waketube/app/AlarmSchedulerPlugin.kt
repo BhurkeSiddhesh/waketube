@@ -14,7 +14,15 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import org.json.JSONArray
 
-@CapacitorPlugin(name = "AlarmScheduler")
+@CapacitorPlugin(
+    name = "AlarmScheduler",
+    permissions = [
+        com.getcapacitor.annotation.Permission(
+            alias = "notifications",
+            strings = [android.Manifest.permission.POST_NOTIFICATIONS]
+        )
+    ]
+)
 class AlarmSchedulerPlugin : Plugin() {
 
     companion object {
@@ -235,6 +243,34 @@ class AlarmSchedulerPlugin : Plugin() {
         } else {
             call.resolve()
         }
+    }
+
+    @PluginMethod
+    fun checkNotificationPermission(call: PluginCall) {
+        val ret = JSObject()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            ret.put("granted", granted)
+        } else {
+            ret.put("granted", true)
+        }
+        call.resolve(ret)
+    }
+
+    @PluginMethod
+    fun requestNotificationPermission(call: PluginCall) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionForAlias("notifications", call, "checkNotificationPermission")
+        } else {
+            val ret = JSObject()
+            ret.put("granted", true)
+            call.resolve(ret)
+        }
+    }
+
+    override fun handleRequestPermissionsResult(requestCode: Int, permissions: Array<out String>?, grantResults: IntArray?) {
+        super.handleRequestPermissionsResult(requestCode, permissions, grantResults)
+        // Handle result logic if needed for specific calls
     }
 
     // Persistence helpers for boot recovery

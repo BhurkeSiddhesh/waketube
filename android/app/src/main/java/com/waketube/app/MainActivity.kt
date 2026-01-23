@@ -17,6 +17,19 @@ class MainActivity : BridgeActivity() {
         
         super.onCreate(savedInstanceState)
         
+        // Handle showing over lock screen and turning screen on
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            )
+        }
+
         // Clear WebView cache to ensure fresh web assets load
         bridge?.webView?.clearCache(true)
         

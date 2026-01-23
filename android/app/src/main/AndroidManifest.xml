@@ -20,8 +20,11 @@
     <!-- Foreground service for alarm handling -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     
-    <!-- Disable Doze mode restrictions (optional - if user grants) -->
+    <!-- Battery optimizations -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Notification permission for Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
