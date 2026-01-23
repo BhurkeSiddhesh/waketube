@@ -40,6 +40,20 @@
 
 ## Change Log (Reverse Chronological)
 
+### 2026-01-23
+- **feat**: Added Android native assets, splash screen, and theme configuration
+- **Files**:
+  - `android/app/src/main/res/drawable/ic_launcher_background.xml`
+  - `android/app/src/main/res/drawable/ic_launcher_foreground.xml`
+  - `android/app/src/main/res/drawable/splash.xml`
+  - `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
+  - `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml`
+  - `android/app/src/main/res/values/colors.xml`
+  - `android/app/src/main/res/values/strings.xml`
+  - `android/app/src/main/res/values/styles.xml`
+  - `android/app/src/main/res/xml/file_paths.xml`
+- **Verification**: `npm test` - 82 tests passed, Visual inspection of assets planned.
+
 ### 2026-01-22
 - **feat**: Background Alarm Service - Alarms now trigger even when app is closed
 - **Files**: 
