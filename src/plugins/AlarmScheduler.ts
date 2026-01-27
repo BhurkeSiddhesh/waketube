@@ -57,14 +57,14 @@ export interface AlarmSchedulerPlugin {
     requestIgnoreBatteryOptimization(): Promise<void>;
 
     /**
-     * Check notification permission (iOS)
+     * Check notification permission
      */
-    checkNotificationPermission?(): Promise<PermissionResult>;
+    checkNotificationPermission(): Promise<PermissionResult>;
 
     /**
-     * Request notification permission (iOS)
+     * Request notification permission
      */
-    requestNotificationPermission?(): Promise<PermissionResult>;
+    requestNotificationPermission(): Promise<PermissionResult>;
 }
 
 // Register the native plugin
@@ -141,10 +141,16 @@ export const AlarmScheduler = {
 
         try {
             if (isAndroid()) {
-                // Only CHECK exact alarm permission, don't open settings
+                // Check exact alarm permission
                 const alarmPerm = await AlarmSchedulerNative.checkExactAlarmPermission();
-                // Return current permission status - don't open settings on startup
-                return alarmPerm.granted;
+
+                // Check notification permission (Android 13+)
+                let notifPerm = { granted: true };
+                if ((AlarmSchedulerNative as any).checkNotificationPermission) {
+                    notifPerm = await (AlarmSchedulerNative as any).checkNotificationPermission();
+                }
+
+                return alarmPerm.granted && notifPerm.granted;
             }
 
             if (isIOS()) {
@@ -176,11 +182,21 @@ export const AlarmScheduler = {
                 const alarmPerm = await AlarmSchedulerNative.checkExactAlarmPermission();
                 if (!alarmPerm.granted) {
                     await AlarmSchedulerNative.requestExactAlarmPermission();
-                    // Re-check after user returns from settings
-                    const recheck = await AlarmSchedulerNative.checkExactAlarmPermission();
-                    return recheck.granted;
                 }
-                return true;
+
+                // Request notification permission (Android 13+)
+                if ((AlarmSchedulerNative as any).requestNotificationPermission) {
+                    await (AlarmSchedulerNative as any).requestNotificationPermission();
+                }
+
+                // Re-check both
+                const alarmRecheck = await AlarmSchedulerNative.checkExactAlarmPermission();
+                let notifRecheck = { granted: true };
+                if ((AlarmSchedulerNative as any).checkNotificationPermission) {
+                    notifRecheck = await (AlarmSchedulerNative as any).checkNotificationPermission();
+                }
+
+                return alarmRecheck.granted && notifRecheck.granted;
             }
 
             if (isIOS()) {

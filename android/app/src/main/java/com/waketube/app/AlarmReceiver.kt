@@ -1,11 +1,16 @@
 package com.waketube.app
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.PowerManager
 import android.util.Log
+import androidx.core.app.NotificationCompat
 
 /**
  * BroadcastReceiver that fires when a scheduled alarm triggers.
@@ -48,12 +53,12 @@ class AlarmReceiver : BroadcastReceiver() {
 
             // For activities that handle extras from fullScreenIntent, FLAG_MUTABLE is often safer/needed
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_MUTABLE
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
             } else {
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT
             }
 
-            val pendingIntent = android.app.PendingIntent.getActivity(
+            val pendingIntent = PendingIntent.getActivity(
                 context,
                 alarmId.hashCode(),
                 fullScreenIntent,
@@ -61,15 +66,15 @@ class AlarmReceiver : BroadcastReceiver() {
             )
 
             // Create notification channel
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = android.app.NotificationChannel(
+                val channel = NotificationChannel(
                     CHANNEL_ID,
                     "Alarm Notifications",
-                    android.app.NotificationManager.IMPORTANCE_HIGH
+                    NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = "Shows when alarm goes off"
-                    lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                     setSound(null, null) // Silent because app handles sound
                     enableVibration(true)
                 }
@@ -77,12 +82,12 @@ class AlarmReceiver : BroadcastReceiver() {
             }
 
             // Build high-priority notification
-            val builder = androidx.core.app.NotificationCompat.Builder(context, CHANNEL_ID)
+            val builder = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setContentTitle("WakeTube Alarm")
                 .setContentText(alarmLabel)
-                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_MAX)
-                .setCategory(androidx.core.app.NotificationCompat.CATEGORY_ALARM)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(pendingIntent, true) // CRITICAL: This launches the activity
                 .setAutoCancel(true)
                 .setOngoing(true)

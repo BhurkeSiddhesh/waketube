@@ -1,9 +1,11 @@
 package com.waketube.app
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
@@ -12,14 +14,16 @@ import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
+import com.getcapacitor.annotation.Permission
 import org.json.JSONArray
+import org.json.JSONObject
 
 @CapacitorPlugin(
     name = "AlarmScheduler",
     permissions = [
-        com.getcapacitor.annotation.Permission(
+        Permission(
             alias = "notifications",
-            strings = [android.Manifest.permission.POST_NOTIFICATIONS]
+            strings = [Manifest.permission.POST_NOTIFICATIONS]
         )
     ]
 )
@@ -249,7 +253,7 @@ class AlarmSchedulerPlugin : Plugin() {
     fun checkNotificationPermission(call: PluginCall) {
         val ret = JSObject()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val granted = context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val granted = context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
             ret.put("granted", granted)
         } else {
             ret.put("granted", true)
@@ -268,10 +272,6 @@ class AlarmSchedulerPlugin : Plugin() {
         }
     }
 
-    override fun handleRequestPermissionsResult(requestCode: Int, permissions: Array<out String>?, grantResults: IntArray?) {
-        super.handleRequestPermissionsResult(requestCode, permissions, grantResults)
-        // Handle result logic if needed for specific calls
-    }
 
     // Persistence helpers for boot recovery
     private fun storeAlarm(id: String, timestampMs: Long, label: String, youtubeUrl: String) {
@@ -288,7 +288,7 @@ class AlarmSchedulerPlugin : Plugin() {
         }
         
         // Add new entry
-        val newAlarm = org.json.JSONObject().apply {
+        val newAlarm = JSONObject().apply {
             put("id", id)
             put("timestampMs", timestampMs)
             put("label", label)

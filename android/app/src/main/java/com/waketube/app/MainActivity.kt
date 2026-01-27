@@ -1,9 +1,12 @@
 package com.waketube.app
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import com.getcapacitor.BridgeActivity
+import com.getcapacitor.JSObject
 
 class MainActivity : BridgeActivity() {
     
@@ -24,9 +27,9 @@ class MainActivity : BridgeActivity() {
         } else {
             @Suppress("DEPRECATION")
             window.addFlags(
-                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
             )
         }
 
@@ -61,7 +64,7 @@ class MainActivity : BridgeActivity() {
             // Notify the web app about the triggered alarm
             alarmId?.let {
                 bridge?.let { b ->
-                    val data = com.getcapacitor.JSObject().apply {
+                    val data = JSObject().apply {
                         put("alarmId", alarmId)
                         put("label", alarmLabel ?: "")
                         put("youtubeUrl", youtubeUrl ?: "")
