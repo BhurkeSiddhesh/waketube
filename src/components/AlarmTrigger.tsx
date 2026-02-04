@@ -1,18 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Alarm } from '../types';
 import { X, Volume2, Volume1, VolumeX, AlertCircle, Loader2 } from 'lucide-react';
+import { extractVideoId } from '../utils/youtube';
 
 interface AlarmTriggerProps {
   alarm: Alarm;
   onDismiss: () => void;
 }
-
-// Extract YouTube video ID from URL
-const getYouTubeVideoId = (url: string): string | null => {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-};
 
 const AlarmTrigger: React.FC<AlarmTriggerProps> = ({ alarm, onDismiss }) => {
   const [showButton, setShowButton] = useState(false);
@@ -22,7 +16,7 @@ const AlarmTrigger: React.FC<AlarmTriggerProps> = ({ alarm, onDismiss }) => {
 
   // Extract video ID from alarm URL
   const videoId = useMemo(() => {
-    const id = getYouTubeVideoId(alarm.videoUrl || '');
+    const id = extractVideoId(alarm.videoUrl || '');
     return id || '7GlsxNI4LVI'; // Default Toccata and Fugue
   }, [alarm.videoUrl]);
 
@@ -84,8 +78,6 @@ const AlarmTrigger: React.FC<AlarmTriggerProps> = ({ alarm, onDismiss }) => {
         showinfo: 0,
         rel: 0,
         modestbranding: 1,
-        playsinline: 1,
-        mute: 0,
         playsinline: 1,
         mute: 0,
         // origin: window.location.origin, // Removed to avoid issues on Capacitor/Android
