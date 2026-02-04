@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, BatteryCharging, AlertTriangle, Moon, Sun, Sparkles, Smartphone } from 'lucide-react';
+import { Plus, Moon, Sun, Sparkles } from 'lucide-react';
 import { Alarm, DayOfWeek } from './types';
 import AlarmCard from './components/AlarmCard';
+import ClockDisplay from './components/ClockDisplay';
 import AddAlarmModal from './components/AddAlarmModal';
 import AlarmTrigger from './components/AlarmTrigger';
 import WakeTubeIcon from './components/WakeTubeIcon';
@@ -45,7 +46,6 @@ const App: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
   const [activeAlarms, setActiveAlarms] = useState<Alarm[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -139,7 +139,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      setCurrentTime(now);
 
       const currentDay = now.getDay() as DayOfWeek;
       const hours = now.getHours().toString().padStart(2, '0');
@@ -287,34 +286,8 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        {/* Hero Clock - Glass Card */}
-        <div className="glass-strong rounded-3xl p-8 mb-6 flex flex-col items-center justify-center shadow-xl">
-          <div className="text-[5rem] sm:text-[7rem] font-black font-mono leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-body via-body to-gray-500/50 select-none">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-          </div>
-          <div className="text-lg font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-2">
-            {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-medium text-green-500 bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20 backdrop-blur-sm">
-              <BatteryCharging size={14} />
-              <span>Active & Monitoring</span>
-            </div>
-
-            {isNativeMode ? (
-              <div className="flex items-center gap-2 text-xs font-medium text-blue-400 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20 backdrop-blur-sm">
-                <Smartphone size={14} />
-                <span>Background alarms enabled</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-xs font-medium text-orange-400 bg-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20 backdrop-blur-sm">
-                <AlertTriangle size={14} />
-                <span>Keep tab open</span>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Hero Clock - Isolated Component */}
+        <ClockDisplay isNativeMode={isNativeMode} />
 
         {/* Alarms List Section */}
         <div className="flex-1 pb-24">
