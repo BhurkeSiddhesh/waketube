@@ -3,7 +3,7 @@ import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
 import { X, Youtube, Clock, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useVideoHistory } from '../hooks/useVideoHistory';
-import { fetchYouTubeTitle } from '../utils/youtube';
+import { fetchYouTubeTitle, isValidYouTubeUrl } from '../utils/youtube';
 
 interface AddAlarmModalProps {
   onClose: () => void;
@@ -50,7 +50,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
   // Fetch title when URL changes (debounced)
   const fetchTitle = useCallback(async (url: string) => {
-    if (!url || (!url.includes('youtube.com') && !url.includes('youtu.be'))) {
+    if (!url || !isValidYouTubeUrl(url)) {
       setVideoTitle(null);
       return;
     }
@@ -79,7 +79,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
   const handleSave = () => {
     // Always save video to history if URL is valid (use title or fallback)
-    if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+    if (videoUrl && isValidYouTubeUrl(videoUrl)) {
       addVideo(videoUrl, videoTitle || 'YouTube Video');
     }
 

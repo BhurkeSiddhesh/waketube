@@ -1,12 +1,26 @@
 /**
+ * Validates if a URL is a valid YouTube URL by checking the hostname strictly.
+ * Allows: youtube.com, www.youtube.com, m.youtube.com, youtu.be
+ */
+export function isValidYouTubeUrl(url: string): boolean {
+    try {
+        const urlObj = new URL(url);
+        const validHosts = ['www.youtube.com', 'youtube.com', 'm.youtube.com', 'youtu.be'];
+        return validHosts.includes(urlObj.hostname);
+    } catch {
+        return false;
+    }
+}
+
+/**
  * Fetches YouTube video title using the oEmbed API.
  * @param url - A valid YouTube video URL.
  * @returns The video title, or null if the fetch fails.
  */
 export async function fetchYouTubeTitle(url: string): Promise<string | null> {
     try {
-        // Validate that it looks like a YouTube URL
-        if (!url.includes('youtube.com/watch') && !url.includes('youtu.be/')) {
+        // Strict validation
+        if (!isValidYouTubeUrl(url)) {
             return null;
         }
 
@@ -30,6 +44,10 @@ export async function fetchYouTubeTitle(url: string): Promise<string | null> {
  */
 export function extractVideoId(url: string): string | null {
     try {
+        if (!isValidYouTubeUrl(url)) {
+            return null;
+        }
+
         const urlObj = new URL(url);
 
         // Handle youtube.com/watch?v=VIDEO_ID
