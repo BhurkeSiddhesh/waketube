@@ -86,8 +86,6 @@ const AlarmTrigger: React.FC<AlarmTriggerProps> = ({ alarm, onDismiss }) => {
         modestbranding: 1,
         playsinline: 1,
         mute: 0,
-        playsinline: 1,
-        mute: 0,
         // origin: window.location.origin, // Removed to avoid issues on Capacitor/Android
       },
       events: {
