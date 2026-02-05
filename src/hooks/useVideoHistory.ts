@@ -17,14 +17,8 @@ export function useVideoHistory() {
         }
     });
 
-    // Persist to localStorage whenever videos change
-    useEffect(() => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(videos));
-        } catch {
-            // Ignore storage errors (e.g., quota exceeded)
-        }
-    }, [videos]);
+    // No longer rely on useEffect for persistence due to unmount race conditions
+    // useEffect(() => { ... }, [videos]);
 
     /**
      * Add a video to history. If it already exists, moves it to the top.
@@ -41,8 +35,16 @@ export function useVideoHistory() {
                 addedAt: Date.now(),
             };
 
-            // Cap at MAX_HISTORY_SIZE
-            return [newVideo, ...filtered].slice(0, MAX_HISTORY_SIZE);
+            const updated = [newVideo, ...filtered].slice(0, MAX_HISTORY_SIZE);
+
+            // Persist immediately to handle component unmounting
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            } catch (e) {
+                console.error("Failed to save video history", e);
+            }
+
+            return updated;
         });
     }, []);
 
@@ -50,7 +52,15 @@ export function useVideoHistory() {
      * Remove a video from history by URL.
      */
     const removeVideo = useCallback((url: string) => {
-        setVideos((prev) => prev.filter((v) => v.url !== url));
+        setVideos((prev) => {
+            const updated = prev.filter((v) => v.url !== url);
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            } catch (e) {
+                console.error("Failed to save video history", e);
+            }
+            return updated;
+        });
     }, []);
 
     /**
@@ -58,6 +68,11 @@ export function useVideoHistory() {
      */
     const clearHistory = useCallback(() => {
         setVideos([]);
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+            console.error("Failed to clear video history", e);
+        }
     }, []);
 
     return {

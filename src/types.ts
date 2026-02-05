@@ -15,6 +15,8 @@ export interface Alarm {
   enabled: boolean;
   videoUrl: string;
   label: string;
+  /** Next scheduled trigger time in milliseconds (for native alarm scheduling) */
+  nextTriggerMs?: number;
 }
 
 export interface SavedVideo {

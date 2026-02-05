@@ -1,13 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, BatteryCharging, AlertTriangle, Moon, Sun, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Moon, Sun, Sparkles } from 'lucide-react';
 import { Alarm, DayOfWeek } from './types';
 import AlarmCard from './components/AlarmCard';
+import ClockDisplay from './components/ClockDisplay';
 import AddAlarmModal from './components/AddAlarmModal';
 import AlarmTrigger from './components/AlarmTrigger';
 import WakeTubeIcon from './components/WakeTubeIcon';
 import { v4 as uuidv4 } from 'uuid';
+import { AlarmScheduler, onAlarmTriggered } from './plugins/AlarmScheduler';
 
 const generateId = () => uuidv4();
+
+/**
+ * Calculate the next trigger timestamp for an alarm
+ */
+const calculateNextTrigger = (time: string, days: DayOfWeek[]): number => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const now = new Date();
+
+  // Try each day starting from today
+  for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
+    const target = new Date(now);
+    target.setDate(target.getDate() + daysAhead);
+    target.setHours(hours, minutes, 0, 0);
+
+    const dayOfWeek = target.getDay() as DayOfWeek;
+
+    // Check if this day is enabled and the time is in the future
+    if (days.includes(dayOfWeek) && target.getTime() > now.getTime()) {
+      return target.getTime();
+    }
+  }
+
+  // If no valid day found within a week, schedule for next occurrence
+  // (this shouldn't happen with valid input)
+  return now.getTime() + 24 * 60 * 60 * 1000;
+};
 
 const App: React.FC = () => {
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
@@ -18,7 +46,6 @@ const App: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
   const [activeAlarms, setActiveAlarms] = useState<Alarm[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -28,6 +55,31 @@ const App: React.FC = () => {
 
   // Track alarms that have already rung this minute
   const [triggeredThisMinute, setTriggeredThisMinute] = useState<string[]>([]);
+
+  // Track if running in native mode (background alarms supported)
+  const [isNativeMode, setIsNativeMode] = useState(false);
+
+  // Initialize native mode detection (no permission requests on startup)
+  useEffect(() => {
+    const isNative = AlarmScheduler.isNativeMode();
+    setIsNativeMode(isNative);
+    console.log('[App] Native mode:', isNative, 'Platform:', AlarmScheduler.getPlatform());
+  }, []);
+
+  // Listen for native alarm triggers
+  useEffect(() => {
+    const cleanup = onAlarmTriggered((event) => {
+      console.log('[App] Native alarm triggered:', event.alarmId);
+
+      // Find the alarm and trigger it
+      const alarm = alarms.find(a => a.id === event.alarmId);
+      if (alarm && !activeAlarms.some(a => a.id === alarm.id)) {
+        setActiveAlarms(prev => [...prev, alarm]);
+      }
+    });
+
+    return cleanup;
+  }, [alarms, activeAlarms]);
 
   // Persist alarms
   useEffect(() => {
@@ -87,7 +139,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      setCurrentTime(now);
 
       const currentDay = now.getDay() as DayOfWeek;
       const hours = now.getHours().toString().padStart(2, '0');
@@ -121,25 +172,77 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, [alarms, activeAlarms, triggeredThisMinute]);
 
-  const addAlarm = (newAlarmData: Omit<Alarm, 'id'>) => {
-    const newAlarm: Alarm = { ...newAlarmData, id: generateId() };
+  const addAlarm = async (newAlarmData: Omit<Alarm, 'id'>) => {
+    const id = generateId();
+    const nextTriggerMs = newAlarmData.enabled
+      ? calculateNextTrigger(newAlarmData.time, newAlarmData.days)
+      : undefined;
+
+    const newAlarm: Alarm = { ...newAlarmData, id, nextTriggerMs };
     setAlarms([...alarms, newAlarm]);
+
+    // Schedule with native alarm manager
+    if (newAlarmData.enabled && nextTriggerMs) {
+      await AlarmScheduler.scheduleAlarm({
+        id,
+        timestampMs: nextTriggerMs,
+        label: newAlarmData.label,
+        youtubeUrl: newAlarmData.videoUrl,
+      });
+    }
   };
 
-  const toggleAlarm = (id: string) => {
-    setAlarms(alarms.map(a => a.id === id ? { ...a, enabled: !a.enabled } : a));
+  const toggleAlarm = async (id: string) => {
+    const alarm = alarms.find(a => a.id === id);
+    if (!alarm) return;
+
+    const newEnabled = !alarm.enabled;
+    const nextTriggerMs = newEnabled
+      ? calculateNextTrigger(alarm.time, alarm.days)
+      : undefined;
+
+    setAlarms(alarms.map(a => a.id === id ? { ...a, enabled: newEnabled, nextTriggerMs } : a));
+
+    if (newEnabled && nextTriggerMs) {
+      await AlarmScheduler.scheduleAlarm({
+        id,
+        timestampMs: nextTriggerMs,
+        label: alarm.label,
+        youtubeUrl: alarm.videoUrl,
+      });
+    } else {
+      await AlarmScheduler.cancelAlarm(id);
+    }
   };
 
-  const deleteAlarm = (id: string) => {
+  const deleteAlarm = async (id: string) => {
     setAlarms(alarms.filter(a => a.id !== id));
+    await AlarmScheduler.cancelAlarm(id);
   };
 
   const dismissAlarm = (id: string) => {
     setActiveAlarms(prev => prev.filter(a => a.id !== id));
   };
 
-  const updateAlarm = (updatedAlarm: Alarm) => {
-    setAlarms(alarms.map(a => a.id === updatedAlarm.id ? updatedAlarm : a));
+  const updateAlarm = async (updatedAlarm: Alarm) => {
+    const nextTriggerMs = updatedAlarm.enabled
+      ? calculateNextTrigger(updatedAlarm.time, updatedAlarm.days)
+      : undefined;
+
+    const alarmWithTrigger = { ...updatedAlarm, nextTriggerMs };
+    setAlarms(alarms.map(a => a.id === updatedAlarm.id ? alarmWithTrigger : a));
+
+    // Cancel old alarm and schedule new one if enabled
+    await AlarmScheduler.cancelAlarm(updatedAlarm.id);
+
+    if (updatedAlarm.enabled && nextTriggerMs) {
+      await AlarmScheduler.scheduleAlarm({
+        id: updatedAlarm.id,
+        timestampMs: nextTriggerMs,
+        label: updatedAlarm.label,
+        youtubeUrl: updatedAlarm.videoUrl,
+      });
+    }
   };
 
   const openEditModal = (alarm: Alarm) => {
@@ -183,30 +286,11 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        {/* Hero Clock - Glass Card */}
-        <div className="glass-strong rounded-3xl p-8 mb-6 flex flex-col items-center justify-center shadow-xl">
-          <div className="text-[5rem] sm:text-[7rem] font-black font-mono leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-body via-body to-gray-500/50 select-none">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-          </div>
-          <div className="text-lg font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-2">
-            {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-medium text-green-500 bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20 backdrop-blur-sm">
-              <BatteryCharging size={14} />
-              <span>Active & Monitoring</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs font-medium text-orange-400 bg-orange-500/10 px-4 py-2 rounded-full border border-orange-500/20 backdrop-blur-sm">
-              <AlertTriangle size={14} />
-              <span>Keep tab open</span>
-            </div>
-          </div>
-        </div>
+        {/* Hero Clock - Isolated Component */}
+        <ClockDisplay isNativeMode={isNativeMode} />
 
         {/* Alarms List Section */}
-        <div className="flex-1 pb-24">
+        <div className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-2">
               <Sparkles size={14} className="text-primary" />
@@ -243,7 +327,7 @@ const App: React.FC = () => {
         {/* FAB - Floating Action Button */}
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-light text-white rounded-2xl shadow-xl shadow-primary/30 flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-30"
+          className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-[calc(1.5rem+env(safe-area-inset-right))] w-14 h-14 bg-primary hover:bg-primary-light text-white rounded-2xl shadow-xl shadow-primary/30 flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-30"
           aria-label="Add new alarm"
         >
           <Plus size={28} strokeWidth={2.5} />

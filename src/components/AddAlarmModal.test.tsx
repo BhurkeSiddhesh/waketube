@@ -20,9 +20,9 @@ describe('AddAlarmModal', () => {
 
         it('renders time input', () => {
             render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
-            // Time input is present (type="time")
-            const timeInputs = document.querySelectorAll('input[type="time"]');
-            expect(timeInputs.length).toBe(1);
+            // Time picker uses two select dropdowns (Hour and Minute)
+            const selects = document.querySelectorAll('select');
+            expect(selects.length).toBeGreaterThanOrEqual(2); // Hour and Minute dropdowns
         });
 
         it('renders all 7 day buttons', () => {

@@ -3,7 +3,7 @@ import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
 import { X, Youtube, Clock, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useVideoHistory } from '../hooks/useVideoHistory';
-import { fetchYouTubeTitle } from '../utils/youtube';
+import { fetchYouTubeTitle, isValidYouTubeUrl } from '../utils/youtube';
 
 interface AddAlarmModalProps {
   onClose: () => void;
@@ -50,7 +50,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
   // Fetch title when URL changes (debounced)
   const fetchTitle = useCallback(async (url: string) => {
-    if (!url || (!url.includes('youtube.com') && !url.includes('youtu.be'))) {
+    if (!url || !isValidYouTubeUrl(url)) {
       setVideoTitle(null);
       return;
     }
@@ -79,7 +79,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
   const handleSave = () => {
     // Always save video to history if URL is valid (use title or fallback)
-    if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+    if (videoUrl && isValidYouTubeUrl(videoUrl)) {
       addVideo(videoUrl, videoTitle || 'YouTube Video');
     }
 
@@ -102,7 +102,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
   const selectFromHistory = (url: string, title: string) => {
     setVideoUrl(url);
     setVideoTitle(title);
-    setShowHistory(false);
   };
 
   return (
@@ -130,15 +129,38 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
         <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto no-scrollbar">
 
-          {/* Time Input */}
+          {/* Time Input - Custom Dropdowns */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time</label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full glass text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body"
-            />
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <select
+                  value={time.split(':')[0]}
+                  onChange={(e) => setTime(`${e.target.value}:${time.split(':')[1]}`)}
+                  className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
+                  style={{ textAlignLast: 'center' }}
+                >
+                  {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(hour => (
+                    <option key={hour} value={hour} className="text-body bg-white dark:bg-gray-800">{hour}</option>
+                  ))}
+                </select>
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-gray-400 text-xs font-bold">HR</div>
+              </div>
+              <div className="text-4xl sm:text-5xl font-mono flex items-center text-gray-400">:</div>
+              <div className="flex-1 relative">
+                <select
+                  value={time.split(':')[1]}
+                  onChange={(e) => setTime(`${time.split(':')[0]}:${e.target.value}`)}
+                  className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
+                  style={{ textAlignLast: 'center' }}
+                >
+                  {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(minute => (
+                    <option key={minute} value={minute} className="text-body bg-white dark:bg-gray-800">{minute}</option>
+                  ))}
+                </select>
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-gray-400 text-xs font-bold">MIN</div>
+              </div>
+            </div>
           </div>
 
           {/* Days Selection */}
@@ -170,29 +192,30 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               YouTube Video
             </label>
 
-            {/* Saved Videos Dropdown - Always visible when videos exist */}
-            {videos.length > 0 && (
-              <div className="space-y-2">
-                <select
-                  value=""
-                  onChange={(e) => {
-                    const video = videos.find(v => v.url === e.target.value);
-                    if (video) {
-                      selectFromHistory(video.url, video.title);
-                    }
-                  }}
-                  className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-transparent cursor-pointer"
-                  data-testid="video-select"
-                >
-                  <option value="" disabled>📚 Choose from saved videos ({videos.length})</option>
-                  {videos.map((video) => (
-                    <option key={video.url} value={video.url}>
-                      {video.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* Saved Videos Dropdown - Always visible for debugging/verification */}
+            <div className="space-y-2">
+              <select
+                value=""
+                onChange={(e) => {
+                  const video = videos.find(v => v.url === e.target.value);
+                  if (video) {
+                    selectFromHistory(video.url, video.title);
+                  }
+                }}
+                className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-transparent cursor-pointer"
+                data-testid="video-select"
+                disabled={videos.length === 0}
+              >
+                <option value="" disabled hidden className="bg-white dark:bg-gray-800 text-body">
+                  {videos.length > 0 ? `Recent Videos (${videos.length})` : "No saved videos yet"}
+                </option>
+                {videos.map((video) => (
+                  <option key={video.url} value={video.url} className="bg-white dark:bg-gray-800 text-body">
+                    {video.title}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* URL Input */}
             <input
@@ -211,9 +234,10 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                   Fetching title...
                 </div>
               ) : videoTitle ? (
-                <p className="text-xs text-primary truncate" data-testid="video-title">
-                  📺 {videoTitle}
-                </p>
+                <div className="flex items-center gap-1.5 text-xs text-primary min-w-0" data-testid="video-title">
+                  <Youtube size={12} className="shrink-0" />
+                  <span className="truncate">{videoTitle}</span>
+                </div>
               ) : (
                 <p className="text-xs text-gray-400">
                   Paste any YouTube video link to use as your alarm sound

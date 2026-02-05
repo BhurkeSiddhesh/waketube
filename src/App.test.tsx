@@ -9,6 +9,26 @@ vi.mock('uuid', () => ({
     v4: vi.fn(() => 'mock-uuid-' + Math.random().toString(36).substr(2, 9)),
 }));
 
+// Mock AlarmScheduler to track permission calls
+const { mockAlarmScheduler } = vi.hoisted(() => {
+    return {
+        mockAlarmScheduler: {
+            isNativeMode: vi.fn(() => false),
+            getPlatform: vi.fn(() => 'web' as const),
+            ensurePermissions: vi.fn().mockResolvedValue(true),
+            requestPermissions: vi.fn().mockResolvedValue(true),
+            scheduleAlarm: vi.fn().mockResolvedValue({ success: true }),
+            cancelAlarm: vi.fn().mockResolvedValue(undefined),
+            cancelAllAlarms: vi.fn().mockResolvedValue(undefined),
+        }
+    };
+});
+
+vi.mock('./plugins/AlarmScheduler', () => ({
+    AlarmScheduler: mockAlarmScheduler,
+    onAlarmTriggered: vi.fn(() => vi.fn()), // Returns cleanup function
+}));
+
 describe('App', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -87,6 +107,38 @@ describe('App', () => {
         it('renders theme toggle button', () => {
             render(<App />);
             expect(screen.getByRole('button', { name: 'Toggle theme' })).toBeInTheDocument();
+        });
+    });
+
+    describe('startup behavior', () => {
+        it('should NOT request any permissions on startup', async () => {
+            render(<App />);
+
+            // Wait for any async effects to complete
+            await waitFor(() => {
+                expect(mockAlarmScheduler.isNativeMode).toHaveBeenCalled();
+            });
+
+            // CRITICAL: These methods should NEVER be called on startup
+            // They would open settings screens which is unwanted behavior
+            expect(mockAlarmScheduler.ensurePermissions).not.toHaveBeenCalled();
+            expect(mockAlarmScheduler.requestPermissions).not.toHaveBeenCalled();
+        });
+
+        it('should detect native mode without requesting permissions', async () => {
+            // Simulate native mode
+            mockAlarmScheduler.isNativeMode.mockReturnValue(true);
+            mockAlarmScheduler.getPlatform.mockReturnValue('android');
+
+            render(<App />);
+
+            await waitFor(() => {
+                expect(mockAlarmScheduler.isNativeMode).toHaveBeenCalled();
+            });
+
+            // Still should not request permissions on startup
+            expect(mockAlarmScheduler.ensurePermissions).not.toHaveBeenCalled();
+            expect(mockAlarmScheduler.requestPermissions).not.toHaveBeenCalled();
         });
     });
 

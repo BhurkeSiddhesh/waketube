@@ -22,12 +22,13 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
   };
 
   const { time, ampm } = formatTime(alarm.time);
+  const fullTime = `${time} ${ampm}`;
 
   return (
     <div className={clsx(
       "glass relative overflow-hidden rounded-2xl p-5 transition-all duration-300",
       alarm.enabled
-        ? "shadow-lg shadow-primary/10 border-primary/20"
+        ? "shadow-lg shadow-primary/10 border-primary/20 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/20"
         : "opacity-60"
     )}>
       {/* Accent line */}
@@ -60,8 +61,9 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               href={alarm.videoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-primary mt-2 hover:text-primary-light transition-colors bg-primary/5 px-2.5 py-1 rounded-full"
+              className="inline-flex items-center gap-1.5 text-xs text-primary mt-2 hover:text-primary-light transition-colors bg-primary/5 px-2.5 py-1 rounded-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none"
               onClick={(e) => e.stopPropagation()}
+              aria-label={`Preview video for ${fullTime} (opens in a new tab)`}
             >
               <Play size={10} className="fill-current" />
               <span>Preview</span>
@@ -71,15 +73,19 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
 
         <div className="flex flex-col items-end gap-3">
           {/* Toggle Switch */}
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label
+            className="relative inline-flex items-center cursor-pointer"
+            title={alarm.enabled ? "Disable Alarm" : "Enable Alarm"}
+          >
             <input
               type="checkbox"
               className="sr-only peer"
               checked={alarm.enabled}
               onChange={() => onToggle(alarm.id)}
+              aria-label={`Toggle alarm for ${fullTime}`}
             />
             <div className={clsx(
-              "w-12 h-7 rounded-full peer transition-all duration-300",
+              "w-12 h-7 rounded-full peer transition-all duration-300 peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface",
               "after:content-[''] after:absolute after:top-[3px] after:left-[3px]",
               "after:bg-white after:rounded-full after:h-[22px] after:w-[22px] after:transition-all after:shadow-md",
               "peer-checked:after:translate-x-5",
@@ -92,15 +98,19 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
           <div className="flex gap-1">
             <button
               onClick={() => onEdit(alarm)}
-              className="text-gray-400 hover:text-primary hover:bg-primary/10 transition-all p-2 rounded-lg"
+              className="text-gray-400 hover:text-primary hover:bg-primary/10 transition-all p-2 rounded-lg focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none"
               data-testid="edit-alarm"
+              aria-label={`Edit alarm for ${fullTime}`}
+              title="Edit Alarm"
             >
               <Pencil size={16} />
             </button>
             <button
               onClick={() => onDelete(alarm.id)}
-              className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg"
+              className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none"
               data-testid="delete-alarm"
+              aria-label={`Delete alarm for ${fullTime}`}
+              title="Delete Alarm"
             >
               <Trash2 size={16} />
             </button>

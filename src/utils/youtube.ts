@@ -1,15 +1,30 @@
 /**
+ * Checks if a URL is a valid YouTube URL (strict hostname check).
+ * Allows: youtube.com, www.youtube.com, m.youtube.com, youtu.be, music.youtube.com
+ */
+export function isValidYouTubeUrl(url: string): boolean {
+    try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase();
+        // Allow valid YouTube domains
+        const validDomains = ['www.youtube.com', 'youtube.com', 'm.youtube.com', 'youtu.be', 'music.youtube.com'];
+        return validDomains.includes(hostname);
+    } catch {
+        return false;
+    }
+}
+
+/**
  * Fetches YouTube video title using the oEmbed API.
  * @param url - A valid YouTube video URL.
  * @returns The video title, or null if the fetch fails.
  */
 export async function fetchYouTubeTitle(url: string): Promise<string | null> {
-    try {
-        // Validate that it looks like a YouTube URL
-        if (!url.includes('youtube.com/watch') && !url.includes('youtu.be/')) {
-            return null;
-        }
+    if (!isValidYouTubeUrl(url)) {
+        return null;
+    }
 
+    try {
         const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
         const response = await fetch(oEmbedUrl);
 
@@ -30,16 +45,31 @@ export async function fetchYouTubeTitle(url: string): Promise<string | null> {
  */
 export function extractVideoId(url: string): string | null {
     try {
-        const urlObj = new URL(url);
-
-        // Handle youtube.com/watch?v=VIDEO_ID
-        if (urlObj.hostname.includes('youtube.com')) {
-            return urlObj.searchParams.get('v');
+        if (!isValidYouTubeUrl(url)) {
+            return null;
         }
+
+        const urlObj = new URL(url);
 
         // Handle youtu.be/VIDEO_ID
         if (urlObj.hostname === 'youtu.be') {
             return urlObj.pathname.slice(1);
+        }
+
+        // Handle youtube.com/watch?v=VIDEO_ID (and m.youtube.com, music.youtube.com)
+        const vParam = urlObj.searchParams.get('v');
+        if (vParam) {
+            return vParam;
+        }
+
+        // Handle youtube.com/embed/VIDEO_ID
+        if (urlObj.pathname.startsWith('/embed/')) {
+            return urlObj.pathname.split('/')[2];
+        }
+
+        // Handle youtube.com/v/VIDEO_ID
+        if (urlObj.pathname.startsWith('/v/')) {
+            return urlObj.pathname.split('/')[2];
         }
 
         return null;

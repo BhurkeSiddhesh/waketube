@@ -103,9 +103,19 @@ describe('AlarmCard', () => {
         it('calls onToggle with alarm id when toggle is clicked', async () => {
             const user = userEvent.setup();
             render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
-            const checkbox = screen.getByRole('checkbox');
+            const checkbox = screen.getByRole('checkbox', { name: 'Toggle alarm for 7:30 AM' });
             await user.click(checkbox);
             expect(onToggle).toHaveBeenCalledWith('test-id-1');
+        });
+    });
+
+    describe('edit functionality', () => {
+        it('calls onEdit with alarm object when edit button is clicked', async () => {
+            const user = userEvent.setup();
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const editButton = screen.getByRole('button', { name: 'Edit alarm for 7:30 AM' });
+            await user.click(editButton);
+            expect(onEdit).toHaveBeenCalledWith(mockAlarm);
         });
     });
 
@@ -113,9 +123,31 @@ describe('AlarmCard', () => {
         it('calls onDelete with alarm id when delete button is clicked', async () => {
             const user = userEvent.setup();
             render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
-            const deleteButton = screen.getByTestId('delete-alarm');
+            const deleteButton = screen.getByRole('button', { name: 'Delete alarm for 7:30 AM' });
             await user.click(deleteButton);
             expect(onDelete).toHaveBeenCalledWith('test-id-1');
+        });
+    });
+
+    describe('accessibility', () => {
+        it('edit button has accessible name with time context', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            expect(screen.getByRole('button', { name: /edit alarm for 7:30 AM/i })).toBeInTheDocument();
+        });
+
+        it('delete button has accessible name with time context', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            expect(screen.getByRole('button', { name: /delete alarm for 7:30 AM/i })).toBeInTheDocument();
+        });
+
+        it('toggle switch has accessible name with time context', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            expect(screen.getByRole('checkbox', { name: /toggle alarm for 7:30 AM/i })).toBeInTheDocument();
+        });
+
+        it('preview link indicates it opens in a new tab', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            expect(screen.getByRole('link', { name: /preview video for 7:30 AM.*opens in a new tab/i })).toBeInTheDocument();
         });
     });
 
