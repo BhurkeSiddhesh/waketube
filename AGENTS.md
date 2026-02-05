@@ -40,6 +40,11 @@
 
 ## Change Log (Reverse Chronological)
 
+### 2026-02-06
+- **feat**: Merged `android-progress` branch into `main` with UI improvements including glassmorphism, safe area insets, hover effects, and documentation updates.
+- **Files**: README.md, src/App.tsx, src/components/AddAlarmModal.tsx, src/components/AlarmCard.tsx, src/index.css
+- **Verification**: `npm test` passed.
+
 ### 2026-01-23
 - **refactor**: Replaced native Android time picker with custom Hour/Minute dropdowns for precise and easy selection (restoring webapp UX).
 - **fix**: Enabled `mediaPlaybackRequiresUserGesture = false` in Android WebView to allow video alarms to autoplay without user interaction.
