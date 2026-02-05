@@ -135,6 +135,39 @@ describe('AddAlarmModal', () => {
 
     // Helper test can be here or separate, but let's keep it here for file cleanliness?
     // Actually helper test doesn't depend on scope (mocks).
+
+    describe('accessibility', () => {
+        it('has accessible inputs for Label and YouTube Video', () => {
+            render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
+
+            // These should work if labels are correctly associated
+            expect(screen.getByLabelText(/Label/i)).toBeInTheDocument();
+            expect(screen.getByLabelText(/YouTube Video/i)).toBeInTheDocument();
+        });
+
+        it('has accessible day toggle buttons', () => {
+            render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
+
+            // Buttons should have aria-labels with full day names
+            expect(screen.getByRole('button', { name: 'Sunday' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Monday' })).toBeInTheDocument();
+        });
+
+        it('has accessible Time inputs', () => {
+            render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
+
+            // Selects should be labeled as Hour and Minute (via aria-label)
+            expect(screen.getByRole('combobox', { name: /Hour/i })).toBeInTheDocument();
+            expect(screen.getByRole('combobox', { name: /Minute/i })).toBeInTheDocument();
+        });
+
+        it('has accessible Recent Videos select', () => {
+            render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
+
+            // Select should have an accessible name
+            expect(screen.getByRole('combobox', { name: /Recent Videos/i })).toBeInTheDocument();
+        });
+    });
 });
 
 describe('getTimeBasedSuggestion helper', () => {
