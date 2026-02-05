@@ -68,6 +68,15 @@ WakeTube features a custom-built design system:
     npm run test:coverage
     ```
 
+## 📱 Android Readiness
+
+WakeTube already ships with a Capacitor 7 Android project, native alarm plugin (AlarmScheduler, AlarmReceiver, BootReceiver), full-screen intents, wake locks, exact alarm permissions, and bundled launcher/splash assets. The Vite `base` is set to `./` and Tailwind is installed locally to keep the web bundle working offline on Android.
+
+What’s still needed before a Play Store-ready APK/AAB:
+* Provide a release signing config/keystore plus Play Store metadata (privacy policy, feature graphic, content rating) — only unsigned debug signing is present.
+* Add native validation (Android emulator/device build step or instrumentation smoke test) to catch regressions in the Capacitor bridge; the repo currently tests only the web layer.
+* Perform device QA and Play Console setup (notification disclosure, Data Safety form) ahead of publishing.
+
 ---
 
 *Built with ❤️ for a more intentional morning.*
