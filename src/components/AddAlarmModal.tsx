@@ -202,12 +202,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                     selectFromHistory(video.url, video.title);
                   }
                 }}
-                className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-white dark:bg-gray-800 cursor-pointer"
+                className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body bg-transparent cursor-pointer"
                 data-testid="video-select"
                 disabled={videos.length === 0}
               >
                 <option value="" disabled hidden className="bg-white dark:bg-gray-800 text-body">
-                  {videos.length > 0 ? `📹 Recent Videos (${videos.length})` : "ℹ️ No saved videos yet"}
+                  {videos.length > 0 ? `Recent Videos (${videos.length})` : "No saved videos yet"}
                 </option>
                 {videos.map((video) => (
                   <option key={video.url} value={video.url} className="bg-white dark:bg-gray-800 text-body">
@@ -234,9 +234,10 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                   Fetching title...
                 </div>
               ) : videoTitle ? (
-                <p className="text-xs text-primary truncate" data-testid="video-title">
-                  📺 {videoTitle}
-                </p>
+                <div className="flex items-center gap-1.5 text-xs text-primary min-w-0" data-testid="video-title">
+                  <Youtube size={12} className="shrink-0" />
+                  <span className="truncate">{videoTitle}</span>
+                </div>
               ) : (
                 <p className="text-xs text-gray-400">
                   Paste any YouTube video link to use as your alarm sound

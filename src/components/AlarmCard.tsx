@@ -28,7 +28,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
     <div className={clsx(
       "glass relative overflow-hidden rounded-2xl p-5 transition-all duration-300",
       alarm.enabled
-        ? "shadow-lg shadow-primary/10 border-primary/20"
+        ? "shadow-lg shadow-primary/10 border-primary/20 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/20"
         : "opacity-60"
     )}>
       {/* Accent line */}

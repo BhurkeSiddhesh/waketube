@@ -68,6 +68,11 @@ WakeTube features a custom-built design system:
     npm run test:coverage
     ```
 
+## Web Limitations
+
+1. Background alarms that play YouTube video/audio are blocked by browser autoplay and background‑tab policies.
+2. For reliable background/locked playback, use the Android or iOS app.
+
 ## 📱 Android Readiness
 
 WakeTube already ships with a Capacitor 7 Android project, native alarm plugin (AlarmScheduler, AlarmReceiver, BootReceiver), full-screen intents, wake locks, exact alarm permissions, and bundled launcher/splash assets. The Vite `base` is set to `./` and Tailwind is installed locally to keep the web bundle working offline on Android.

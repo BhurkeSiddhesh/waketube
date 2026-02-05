@@ -290,7 +290,7 @@ const App: React.FC = () => {
         <ClockDisplay isNativeMode={isNativeMode} />
 
         {/* Alarms List Section */}
-        <div className="flex-1 pb-24">
+        <div className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-2">
               <Sparkles size={14} className="text-primary" />
@@ -327,7 +327,7 @@ const App: React.FC = () => {
         {/* FAB - Floating Action Button */}
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary-light text-white rounded-2xl shadow-xl shadow-primary/30 flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-30"
+          className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-[calc(1.5rem+env(safe-area-inset-right))] w-14 h-14 bg-primary hover:bg-primary-light text-white rounded-2xl shadow-xl shadow-primary/30 flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-30"
           aria-label="Add new alarm"
         >
           <Plus size={28} strokeWidth={2.5} />
