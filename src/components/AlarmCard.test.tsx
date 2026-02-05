@@ -103,9 +103,19 @@ describe('AlarmCard', () => {
         it('calls onToggle with alarm id when toggle is clicked', async () => {
             const user = userEvent.setup();
             render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
-            const checkbox = screen.getByRole('checkbox');
+            const checkbox = screen.getByRole('checkbox', { name: 'Toggle alarm for 7:30 AM' });
             await user.click(checkbox);
             expect(onToggle).toHaveBeenCalledWith('test-id-1');
+        });
+    });
+
+    describe('edit functionality', () => {
+        it('calls onEdit with alarm object when edit button is clicked', async () => {
+            const user = userEvent.setup();
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const editButton = screen.getByRole('button', { name: 'Edit alarm for 7:30 AM' });
+            await user.click(editButton);
+            expect(onEdit).toHaveBeenCalledWith(mockAlarm);
         });
     });
 
@@ -113,7 +123,7 @@ describe('AlarmCard', () => {
         it('calls onDelete with alarm id when delete button is clicked', async () => {
             const user = userEvent.setup();
             render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
-            const deleteButton = screen.getByRole('button', { name: /delete alarm/i });
+            const deleteButton = screen.getByRole('button', { name: 'Delete alarm for 7:30 AM' });
             await user.click(deleteButton);
             expect(onDelete).toHaveBeenCalledWith('test-id-1');
         });
