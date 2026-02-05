@@ -22,6 +22,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
   };
 
   const { time, ampm } = formatTime(alarm.time);
+  const fullTime = `${time} ${ampm}`;
 
   return (
     <div className={clsx(
@@ -62,6 +63,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-primary mt-2 hover:text-primary-light transition-colors bg-primary/5 px-2.5 py-1 rounded-full"
               onClick={(e) => e.stopPropagation()}
+              aria-label={`Preview video for ${fullTime} (opens in a new tab)`}
             >
               <Play size={10} className="fill-current" />
               <span>Preview</span>
@@ -77,6 +79,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               className="sr-only peer"
               checked={alarm.enabled}
               onChange={() => onToggle(alarm.id)}
+              aria-label={`Toggle alarm for ${fullTime}`}
             />
             <div className={clsx(
               "w-12 h-7 rounded-full peer transition-all duration-300",
@@ -94,6 +97,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               onClick={() => onEdit(alarm)}
               className="text-gray-400 hover:text-primary hover:bg-primary/10 transition-all p-2 rounded-lg"
               data-testid="edit-alarm"
+              aria-label={`Edit alarm for ${fullTime}`}
             >
               <Pencil size={16} />
             </button>
@@ -101,6 +105,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               onClick={() => onDelete(alarm.id)}
               className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg"
               data-testid="delete-alarm"
+              aria-label={`Delete alarm for ${fullTime}`}
             >
               <Trash2 size={16} />
             </button>
