@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Moon, Sun, Sparkles } from 'lucide-react';
 import { Alarm, DayOfWeek } from './types';
 import AlarmCard from './components/AlarmCard';
+import ClockDisplay from './components/ClockDisplay';
 import AddAlarmModal from './components/AddAlarmModal';
 import AlarmTrigger from './components/AlarmTrigger';
-import ClockDisplay from './components/ClockDisplay';
 import WakeTubeIcon from './components/WakeTubeIcon';
 import { v4 as uuidv4 } from 'uuid';
 import { AlarmScheduler, onAlarmTriggered } from './plugins/AlarmScheduler';
@@ -286,7 +286,7 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        {/* Hero Clock */}
+        {/* Hero Clock - Isolated Component */}
         <ClockDisplay isNativeMode={isNativeMode} />
 
         {/* Alarms List Section */}
