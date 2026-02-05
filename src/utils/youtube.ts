@@ -1,5 +1,6 @@
 /**
  * Checks if a URL is a valid YouTube URL (strict hostname check).
+ * Allows: youtube.com, www.youtube.com, m.youtube.com, youtu.be, music.youtube.com
  */
 export function isValidYouTubeUrl(url: string): boolean {
     try {
@@ -43,11 +44,11 @@ export async function fetchYouTubeTitle(url: string): Promise<string | null> {
  * Supports youtube.com/watch?v= and youtu.be/ formats.
  */
 export function extractVideoId(url: string): string | null {
-    if (!isValidYouTubeUrl(url)) {
-        return null;
-    }
-
     try {
+        if (!isValidYouTubeUrl(url)) {
+            return null;
+        }
+
         const urlObj = new URL(url);
 
         // Handle youtu.be/VIDEO_ID
