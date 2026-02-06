@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
-import { X, Youtube, Clock, Loader2 } from 'lucide-react';
+import { X, Youtube, Clock, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { useVideoHistory } from '../hooks/useVideoHistory';
 import { fetchYouTubeTitle } from '../utils/youtube';
+import { geminiService } from '../services/geminiService';
 
 interface AddAlarmModalProps {
   onClose: () => void;
@@ -40,6 +41,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
   const [videoUrl, setVideoUrl] = useState(editingAlarm?.videoUrl || 'https://www.youtube.com/watch?v=7GlsxNI4LVI');
   const [videoTitle, setVideoTitle] = useState<string | null>(null);
   const [isFetchingTitle, setIsFetchingTitle] = useState(false);
+
+  // AI Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchingAI, setIsSearchingAI] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(() => {
     if (editingAlarm) return editingAlarm.days;
     const today = new Date().getDay() as DayOfWeek;
@@ -68,6 +75,34 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
     return () => clearTimeout(timer);
   }, [videoUrl, fetchTitle]);
+
+  const handleAISearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setIsSearchingAI(true);
+    setSearchError(null);
+
+    // Check if API key is available before making the call
+    if (!geminiService.isAvailable()) {
+      setIsSearchingAI(false);
+      setSearchError('AI Search unavailable (API Key missing). Please enter a URL manually.');
+      return;
+    }
+
+    const result = await geminiService.searchYouTube(searchQuery);
+
+    if (result) {
+      setVideoUrl(result.url);
+      setLabel(result.title.substring(0, 30)); // Update label to song name
+      setVideoTitle(result.title);
+      setSearchQuery(''); // Clear search on success
+    } else {
+      // Improved error handling
+      setSearchError('No matching video found. Try a different description.');
+    }
+
+    setIsSearchingAI(false);
+  };
 
   const toggleDay = (day: DayOfWeek) => {
     if (selectedDays.includes(day)) {
@@ -169,6 +204,46 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               <Youtube size={14} className="text-danger" />
               YouTube Video
             </label>
+
+            {/* AI Search */}
+            <div className="relative">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (searchError) setSearchError(null);
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
+                  placeholder="✨ Describe a mood or song..."
+                  className={clsx(
+                    "flex-1 glass text-sm p-3 rounded-lg border focus:border-primary focus:outline-none text-body placeholder:text-gray-400",
+                    searchError ? "border-red-300 bg-red-50/50" : "border-borderDim"
+                  )}
+                />
+                <button
+                  onClick={handleAISearch}
+                  disabled={isSearchingAI || !searchQuery.trim()}
+                  className="bg-gradient-to-br from-primary to-primary-dark text-white p-3 rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Ask AI to find a video"
+                >
+                  {isSearchingAI ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                </button>
+              </div>
+              {searchError && (
+                <div className="absolute -bottom-6 left-0 flex items-center gap-1.5 text-xs text-red-500 animate-in slide-in-from-top-1">
+                  <AlertCircle size={12} />
+                  {searchError}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 my-2">
+               <div className="h-px bg-borderDim flex-1"></div>
+               <span className="text-[10px] text-gray-400 uppercase font-medium">OR</span>
+               <div className="h-px bg-borderDim flex-1"></div>
+            </div>
 
             {/* Saved Videos Dropdown - Always visible when videos exist */}
             {videos.length > 0 && (
