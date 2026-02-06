@@ -11,7 +11,8 @@
     ],
     "skipLibCheck": true,
     "types": [
-      "node"
+      "node",
+      "youtube"
     ],
     "moduleResolution": "bundler",
     "isolatedModules": true,
