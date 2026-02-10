@@ -97,9 +97,9 @@ const App: React.FC = () => {
     localStorage.setItem('waketube-theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
+  }, []);
 
   // Wake Lock API
   useEffect(() => {
@@ -172,14 +172,14 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, [alarms, activeAlarms, triggeredThisMinute]);
 
-  const addAlarm = async (newAlarmData: Omit<Alarm, 'id'>) => {
+  const addAlarm = useCallback(async (newAlarmData: Omit<Alarm, 'id'>) => {
     const id = generateId();
     const nextTriggerMs = newAlarmData.enabled
       ? calculateNextTrigger(newAlarmData.time, newAlarmData.days)
       : undefined;
 
     const newAlarm: Alarm = { ...newAlarmData, id, nextTriggerMs };
-    setAlarms([...alarms, newAlarm]);
+    setAlarms(prev => [...prev, newAlarm]);
 
     // Schedule with native alarm manager
     if (newAlarmData.enabled && nextTriggerMs) {
@@ -190,47 +190,45 @@ const App: React.FC = () => {
         youtubeUrl: newAlarmData.videoUrl,
       });
     }
-  };
+  }, []);
 
-  const toggleAlarm = async (id: string) => {
-    const alarm = alarms.find(a => a.id === id);
-    if (!alarm) return;
-
+  const toggleAlarm = useCallback(async (alarm: Alarm) => {
+    // No need to find the alarm, we have it
     const newEnabled = !alarm.enabled;
     const nextTriggerMs = newEnabled
       ? calculateNextTrigger(alarm.time, alarm.days)
       : undefined;
 
-    setAlarms(alarms.map(a => a.id === id ? { ...a, enabled: newEnabled, nextTriggerMs } : a));
+    setAlarms(prev => prev.map(a => a.id === alarm.id ? { ...a, enabled: newEnabled, nextTriggerMs } : a));
 
     if (newEnabled && nextTriggerMs) {
       await AlarmScheduler.scheduleAlarm({
-        id,
+        id: alarm.id,
         timestampMs: nextTriggerMs,
         label: alarm.label,
         youtubeUrl: alarm.videoUrl,
       });
     } else {
-      await AlarmScheduler.cancelAlarm(id);
+      await AlarmScheduler.cancelAlarm(alarm.id);
     }
-  };
+  }, []);
 
-  const deleteAlarm = async (id: string) => {
-    setAlarms(alarms.filter(a => a.id !== id));
+  const deleteAlarm = useCallback(async (id: string) => {
+    setAlarms(prev => prev.filter(a => a.id !== id));
     await AlarmScheduler.cancelAlarm(id);
-  };
+  }, []);
 
-  const dismissAlarm = (id: string) => {
+  const dismissAlarm = useCallback((id: string) => {
     setActiveAlarms(prev => prev.filter(a => a.id !== id));
-  };
+  }, []);
 
-  const updateAlarm = async (updatedAlarm: Alarm) => {
+  const updateAlarm = useCallback(async (updatedAlarm: Alarm) => {
     const nextTriggerMs = updatedAlarm.enabled
       ? calculateNextTrigger(updatedAlarm.time, updatedAlarm.days)
       : undefined;
 
     const alarmWithTrigger = { ...updatedAlarm, nextTriggerMs };
-    setAlarms(alarms.map(a => a.id === updatedAlarm.id ? alarmWithTrigger : a));
+    setAlarms(prev => prev.map(a => a.id === updatedAlarm.id ? alarmWithTrigger : a));
 
     // Cancel old alarm and schedule new one if enabled
     await AlarmScheduler.cancelAlarm(updatedAlarm.id);
@@ -243,17 +241,17 @@ const App: React.FC = () => {
         youtubeUrl: updatedAlarm.videoUrl,
       });
     }
-  };
+  }, []);
 
-  const openEditModal = (alarm: Alarm) => {
+  const openEditModal = useCallback((alarm: Alarm) => {
     setEditingAlarm(alarm);
     setIsAddModalOpen(true);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsAddModalOpen(false);
     setEditingAlarm(null);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-transparent text-body font-sans relative flex flex-col">
