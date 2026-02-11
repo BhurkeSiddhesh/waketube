@@ -24,7 +24,7 @@ const getTimeBasedSuggestion = (hour: number): string => {
   return "Late Night Vibes";
 };
 
-const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate, alarm: editingAlarm }) => {
+const AddAlarmModal: React.FC<AddAlarmModalProps> = React.memo(({ onClose, onSave, onUpdate, alarm: editingAlarm }) => {
   const isEditing = !!editingAlarm;
 
   const [time, setTime] = useState(() => {
@@ -273,6 +273,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
       </div>
     </div>
   );
-};
+});
 
 export default AddAlarmModal;
