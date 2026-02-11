@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Moon, Sun, Sparkles } from 'lucide-react';
 import { Alarm, DayOfWeek } from './types';
 import AlarmCard from './components/AlarmCard';
@@ -250,6 +250,8 @@ const App: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
+  const activeAlarmsCount = useMemo(() => alarms.filter(a => a.enabled).length, [alarms]);
+
   const closeModal = () => {
     setIsAddModalOpen(false);
     setEditingAlarm(null);
@@ -297,7 +299,7 @@ const App: React.FC = () => {
               <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">Your Alarms</h3>
             </div>
             <span className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-              {alarms.filter(a => a.enabled).length} Active
+              {activeAlarmsCount} Active
             </span>
           </div>
 
