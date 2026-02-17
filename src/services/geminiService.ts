@@ -27,31 +27,15 @@ export class GeminiService {
     }
 
     try {
-      const model = this.client.models.get({ model: "gemini-2.5-flash" });
-
-      const prompt = `You are a DJ and music expert.
-      I need you to find a YouTube video that matches this description: "${query}".
-
-      Please return a JSON object with exactly two fields:
-      - "title": The title of the song/video
-      - "url": A valid YouTube URL for it.
-
-      If you cannot find a specific real URL, provide a highly probable URL pattern or a well-known video URL that matches the mood.
-      Only return the JSON object, no markdown formatting.`;
-
-      const result = await model.generateContent({
-        contents: [
-            {
-                role: "user",
-                parts: [{ text: prompt }]
-            }
-        ],
+      const response = await this.client.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: query,
         config: {
-            responseMimeType: "application/json"
+            systemInstruction: "You are a DJ and music expert. I need you to find a YouTube video that matches the user description. Return JSON: {title, url}."
         }
       });
 
-      const responseText = result.response.text();
+      const responseText = response.text as string;
 
       if (!responseText) {
         return null;
