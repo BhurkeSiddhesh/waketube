@@ -7,3 +7,7 @@
 ## 2025-02-04 - Accessibility Improvements for AlarmCard
 **Learning:** Icon-only buttons (like Edit/Delete) are common in this design system but completely invisible to screen readers without explicit `aria-label`s. Using dynamic labels that include context (e.g., "Edit alarm for 7:30 AM") rather than just "Edit" significantly improves the experience for screen reader users by distinguishing between multiple alarms in a list.
 **Action:** Always include dynamic, contextual `aria-label`s for repetitive list actions.
+
+## 2025-05-21 - Semantic Grouping for Form Controls
+**Learning:** Complex form inputs like Time (Hour/Minute) and Repeats (Day Selection) are often implemented as separate inputs wrapped in divs. This loses the relationship between the group label and the inputs.
+**Action:** Use `<fieldset>` and `<legend>` to semantically group related inputs. This provides a programmatically determined group label for screen readers, improving context for users navigating complex forms.

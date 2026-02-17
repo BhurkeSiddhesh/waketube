@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
+import { Alarm, DayOfWeek, DAYS_LABELS, FULL_DAYS_LABELS } from '../types';
 import { X, Youtube, Clock, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { useVideoHistory } from '../hooks/useVideoHistory';
@@ -54,6 +54,10 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
   });
 
   const { videos, addVideo, removeVideo } = useVideoHistory();
+
+  // Generate unique IDs for form inputs to ensure accessibility
+  const labelId = React.useId();
+  const videoId = React.useId();
 
   // Fetch title when URL changes (debounced)
   const fetchTitle = useCallback(async (url: string) => {
@@ -165,11 +169,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
         <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto no-scrollbar">
 
           {/* Time Input - Custom Dropdowns */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time</label>
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time</legend>
             <div className="flex gap-4">
               <div className="flex-1 relative">
                 <select
+                  aria-label="Hour"
                   value={time.split(':')[0]}
                   onChange={(e) => setTime(`${e.target.value}:${time.split(':')[1]}`)}
                   className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
@@ -184,6 +189,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               <div className="text-4xl sm:text-5xl font-mono flex items-center text-gray-400">:</div>
               <div className="flex-1 relative">
                 <select
+                  aria-label="Minute"
                   value={time.split(':')[1]}
                   onChange={(e) => setTime(`${time.split(':')[0]}:${e.target.value}`)}
                   className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
@@ -196,15 +202,16 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                 <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-gray-400 text-xs font-bold">MIN</div>
               </div>
             </div>
-          </div>
+          </fieldset>
 
           {/* Days Selection */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Repeats</label>
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider">Repeats</legend>
             <div className="flex justify-between gap-1.5">
               {DAYS_LABELS.map((dayLabel, idx) => (
                 <button
                   key={idx}
+                  aria-label={FULL_DAYS_LABELS[idx]}
                   data-testid={`day-toggle-${idx}`}
                   onClick={() => toggleDay(idx as DayOfWeek)}
                   className={clsx(
@@ -218,11 +225,11 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {/* YouTube URL Input */}
           <div className="space-y-3">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label htmlFor={videoId} className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Youtube size={14} className="text-danger" />
               YouTube Video
             </label>
@@ -270,6 +277,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
             {/* Saved Videos Dropdown - Always visible when videos exist */}
             <div className="space-y-2">
               <select
+                aria-label="Recent Videos"
                 value=""
                 onChange={(e) => {
                   const video = videos.find(v => v.url === e.target.value);
@@ -294,6 +302,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
             {/* URL Input */}
             <input
+              id={videoId}
               type="text"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
@@ -324,8 +333,9 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
           {/* Label Input */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Label</label>
+            <label htmlFor={labelId} className="text-xs font-medium text-gray-500 uppercase tracking-wider">Label</label>
             <input
+              id={labelId}
               type="text"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
