@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Plus, Moon, Sun, Sparkles } from 'lucide-react';
 import { Alarm, DayOfWeek } from './types';
 import AlarmCard from './components/AlarmCard';
@@ -55,6 +55,18 @@ const App: React.FC = () => {
 
   // Track alarms that have already rung this minute
   const [triggeredThisMinute, setTriggeredThisMinute] = useState<string[]>([]);
+
+  // Refs for performance optimization (avoiding interval recreation)
+  const alarmsRef = useRef(alarms);
+  const activeAlarmsRef = useRef(activeAlarms);
+  const triggeredThisMinuteRef = useRef(triggeredThisMinute);
+
+  // Keep refs synchronized with state
+  useEffect(() => {
+    alarmsRef.current = alarms;
+    activeAlarmsRef.current = activeAlarms;
+    triggeredThisMinuteRef.current = triggeredThisMinute;
+  }, [alarms, activeAlarms, triggeredThisMinute]);
 
   // Track if running in native mode (background alarms supported)
   const [isNativeMode, setIsNativeMode] = useState(false);
@@ -152,13 +164,13 @@ const App: React.FC = () => {
       }
 
       // Check alarms
-      const matchingAlarms = alarms.filter(a => {
+      const matchingAlarms = alarmsRef.current.filter(a => {
         return (
           a.enabled &&
           a.time === timeString &&
           a.days.includes(currentDay) &&
-          !triggeredThisMinute.includes(a.id) &&
-          !activeAlarms.some(active => active.id === a.id)
+          !triggeredThisMinuteRef.current.includes(a.id) &&
+          !activeAlarmsRef.current.some(active => active.id === a.id)
         );
       });
 
@@ -170,7 +182,7 @@ const App: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [alarms, activeAlarms, triggeredThisMinute]);
+  }, []);
 
   const addAlarm = async (newAlarmData: Omit<Alarm, 'id'>) => {
     const id = generateId();
