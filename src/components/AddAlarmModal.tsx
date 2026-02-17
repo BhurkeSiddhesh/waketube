@@ -298,6 +298,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder={videos.length > 0 ? "Or paste a new YouTube URL" : "Paste YouTube video URL"}
+              maxLength={2048}
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
 
@@ -329,6 +330,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder={suggestedLabel}
+              maxLength={50}
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
           </div>
