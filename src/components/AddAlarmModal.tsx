@@ -13,6 +13,10 @@ interface AddAlarmModalProps {
   alarm?: Alarm; // If provided, we're editing this alarm
 }
 
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+
 // Get time-based label suggestions
 const getTimeBasedSuggestion = (hour: number): string => {
   if (hour >= 5 && hour < 7) return "Early Bird Rise";
@@ -180,7 +184,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = React.memo(({ onClose, onSav
                   className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
                   style={{ textAlignLast: 'center' }}
                 >
-                  {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(hour => (
+                  {HOURS.map(hour => (
                     <option key={hour} value={hour} className="text-body bg-white dark:bg-gray-800">{hour}</option>
                   ))}
                 </select>
@@ -195,7 +199,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = React.memo(({ onClose, onSav
                   className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
                   style={{ textAlignLast: 'center' }}
                 >
-                  {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(minute => (
+                  {MINUTES.map(minute => (
                     <option key={minute} value={minute} className="text-body bg-white dark:bg-gray-800">{minute}</option>
                   ))}
                 </select>
