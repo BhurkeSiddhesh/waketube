@@ -15,11 +15,11 @@ reviews:
   # Enable high-level summary
   high_level_summary: true
   
-  # Enable detailed poem-style summary (optional, fun feature)
-  poem: true
+  # Enable detailed poem-style summary (disabled for professional tone)
+  poem: false
   
   # Review levels: "auto" or "comprehensive"
-  review_status: true
+  review_status: auto
   
   # Collapse walkthrough details in PR comments
   collapse_walkthrough: false
@@ -31,7 +31,7 @@ reviews:
     # Auto-approve PRs that pass all checks (use with caution)
     auto_approve: false
     
-    # Ignore specific file patterns for auto-review
+    # Ignore PRs from auto-review when their titles contain these keywords
     ignore_title_keywords:
       - "WIP"
       - "DO NOT MERGE"
@@ -84,7 +84,7 @@ reviews:
         - Edge case testing
     
     # TypeScript Type Definitions
-    - path: "**/*.ts"
+    - path: "src/**/*.ts"
       instructions: |
         Review for:
         - Strong typing (avoid 'any' unless absolutely necessary)
@@ -205,14 +205,12 @@ knowledge_base:
     # Scope: global, repository, or organization
     scope: repository
 
-  # Documentation to use for context
+  # Opt out of knowledge base indexing for these paths (see 'ignore' section for review exclusions)
   opt_out:
     - "coverage/**"
     - "dist/**"
     - "build/**"
     - "node_modules/**"
-    - "*.lock"
-    - "*.log"
 
 # Repository-Specific Context
 context:
