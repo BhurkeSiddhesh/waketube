@@ -147,6 +147,13 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-darker text-body font-sans relative flex flex-col transition-colors duration-300">
+      {/* Skip to Content */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary font-bold shadow-lg"
+      >
+        Skip to content
+      </a>
 
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -174,7 +181,7 @@ const App: React.FC = () => {
         </header>
 
         {/* Hero Clock */}
-        <div className="mb-12 flex flex-col items-center justify-center py-10">
+        <div id="main-content" className="mb-12 flex flex-col items-center justify-center py-10">
           <div className="text-[6rem] sm:text-[8rem] font-black font-mono leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-body to-gray-500/50 select-none">
             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
           </div>
@@ -221,6 +228,7 @@ const App: React.FC = () => {
         <button
           onClick={() => setIsAddModalOpen(true)}
           className="fixed bottom-8 right-8 w-16 h-16 bg-primary hover:bg-rose-600 text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-30"
+          aria-label="Add alarm"
         >
           <Plus size={32} />
         </button>
