@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright, expect
 
 def verify_accessibility(page):
     # 1. Arrange: Go to the app
-    page.goto("http://localhost:3000")
+    page.goto(process.env.BASE_URL || "http://localhost:3000")
 
     # 2. Act: Click the FAB to open the modal
     # FAB is likely an icon-only button at the bottom right
