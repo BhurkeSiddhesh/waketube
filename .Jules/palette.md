@@ -9,5 +9,6 @@
 **Action:** Always include dynamic, contextual `aria-label`s for repetitive list actions.
 
 ## 2025-05-21 - Semantic Grouping for Form Controls
+
 **Learning:** Complex form inputs like Time (Hour/Minute) and Repeats (Day Selection) are often implemented as separate inputs wrapped in divs. This loses the relationship between the group label and the inputs.
 **Action:** Use `<fieldset>` and `<legend>` to semantically group related inputs. This provides a programmatically determined group label for screen readers, improving context for users navigating complex forms.
