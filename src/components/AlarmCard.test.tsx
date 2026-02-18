@@ -85,6 +85,12 @@ describe('AlarmCard', () => {
             render(<AlarmCard alarm={noVideoAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
             expect(screen.queryByRole('link', { name: /preview/i })).not.toBeInTheDocument();
         });
+
+        it('renders accessible labels for edit and delete buttons', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            expect(screen.getByLabelText('Edit Morning Workout for 7:30 AM')).toBeInTheDocument();
+            expect(screen.getByLabelText('Delete Morning Workout for 7:30 AM')).toBeInTheDocument();
+        });
     });
 
     describe('toggle functionality', () => {

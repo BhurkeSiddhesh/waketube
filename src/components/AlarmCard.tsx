@@ -92,15 +92,19 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
           <div className="flex gap-1">
             <button
               onClick={() => onEdit(alarm)}
-              className="text-gray-400 hover:text-primary hover:bg-primary/10 transition-all p-2 rounded-lg"
+              className="text-gray-400 hover:text-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all p-2 rounded-lg"
               data-testid="edit-alarm"
+              aria-label={`Edit ${alarm.label || 'Alarm'} for ${time} ${ampm}`}
+              title="Edit Alarm"
             >
               <Pencil size={16} />
             </button>
             <button
               onClick={() => onDelete(alarm.id)}
-              className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg"
+              className="text-gray-400 hover:text-danger hover:bg-danger/10 focus-visible:ring-2 focus-visible:ring-danger focus-visible:outline-none transition-all p-2 rounded-lg"
               data-testid="delete-alarm"
+              aria-label={`Delete ${alarm.label || 'Alarm'} for ${time} ${ampm}`}
+              title="Delete Alarm"
             >
               <Trash2 size={16} />
             </button>

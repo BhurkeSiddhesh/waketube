@@ -176,8 +176,9 @@ const App: React.FC = () => {
 
           <button
             onClick={toggleTheme}
-            className="glass w-10 h-10 rounded-xl flex items-center justify-center text-gray-500 hover:text-body hover:scale-105 active:scale-95"
+            className="glass w-10 h-10 rounded-xl flex items-center justify-center text-gray-500 hover:text-body hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
             aria-label="Toggle theme"
+            title="Toggle theme"
           >
             {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
           </button>

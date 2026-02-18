@@ -122,7 +122,9 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-body hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-body hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all"
+            aria-label="Close modal"
+            title="Close"
           >
             <X size={20} />
           </button>
