@@ -1,0 +1,315 @@
+# CodeRabbit Configuration for WakeTube
+# AI-Powered Code Review for React 19 + TypeScript + Capacitor Project
+
+# Language and Framework Configuration
+language: en-US
+
+# Enable Early Access Features
+early_access: false
+
+# Enable or Disable Reviews
+reviews:
+  # Automatically request changes when critical issues are found
+  request_changes_workflow: false
+  
+  # Enable high-level summary
+  high_level_summary: true
+  
+  # Enable detailed poem-style summary (disabled for professional tone)
+  poem: false
+  
+  # Review levels: "auto" or "comprehensive"
+  review_status: auto
+  
+  # Collapse walkthrough details in PR comments
+  collapse_walkthrough: false
+  
+  # Auto-review configuration
+  auto_review:
+    enabled: true
+    
+    # Auto-approve PRs that pass all checks (use with caution)
+    auto_approve: false
+    
+    # Ignore PRs from auto-review when their titles contain these keywords
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+      - "wip"
+      - "draft"
+    
+    # Drafts are not auto-reviewed by default
+    drafts: false
+
+  # Path-based instructions for focused reviews
+  path_instructions:
+    # React Components - Focus on hooks, performance, accessibility
+    - path: "src/components/**/*.tsx"
+      instructions: |
+        Review for:
+        - Proper React 19 hook usage (useState, useEffect, custom hooks)
+        - Component re-render optimization (useMemo, useCallback when needed)
+        - Accessibility (ARIA labels, keyboard navigation, screen reader support)
+        - TypeScript prop types and interface definitions
+        - Error boundary handling
+        - Avoid inline function definitions in JSX when possible
+    
+    # Main App Component - Focus on state management and architecture
+    - path: "src/App.tsx"
+      instructions: |
+        Review for:
+        - Centralized state management patterns
+        - Side effect management in useEffect
+        - localStorage interaction safety (error handling, serialization)
+        - Theme switching logic consistency
+        - Wake Lock API usage and fallback handling
+    
+    # Test Files - Focus on coverage and best practices
+    - path: "**/*.test.tsx"
+      instructions: |
+        Review for:
+        - Comprehensive test coverage for new/modified code
+        - Proper use of React Testing Library patterns
+        - Mock usage and cleanup
+        - Test isolation and no side effects between tests
+        - Descriptive test names and arrange-act-assert pattern
+        - Edge case coverage
+    
+    - path: "**/*.test.ts"
+      instructions: |
+        Review for:
+        - Comprehensive test coverage
+        - Proper Vitest patterns and matchers
+        - Test isolation and cleanup
+        - Edge case testing
+    
+    # TypeScript Type Definitions
+    - path: "src/**/*.ts"
+      instructions: |
+        Review for:
+        - Strong typing (avoid 'any' unless absolutely necessary)
+        - Proper interface vs type usage
+        - Generic type usage when appropriate
+        - Type exports for reusability
+        - Discriminated unions for complex state
+    
+    # Native Plugins (Capacitor)
+    - path: "src/plugins/**/*.ts"
+      instructions: |
+        Review for:
+        - Capacitor plugin registration and platform checks
+        - Web fallback implementations
+        - TypeScript definitions for native bridge
+        - Error handling for native calls
+        - Platform-specific code documentation
+    
+    # Android Native Code
+    - path: "android/**/*.kt"
+      instructions: |
+        Review for:
+        - Kotlin best practices and idioms
+        - Proper Android lifecycle handling
+        - Permission handling and API level compatibility
+        - AlarmManager and notification best practices
+        - Memory leak prevention
+        - Thread safety for background operations
+    
+    # iOS Native Code
+    - path: "ios/**/*.swift"
+      instructions: |
+        Review for:
+        - Swift best practices and modern syntax
+        - Proper iOS lifecycle handling
+        - UNUserNotificationCenter usage
+        - Memory management (ARC patterns)
+        - Thread safety and main thread UI updates
+    
+    # Utility Functions
+    - path: "src/utils/**/*.ts"
+      instructions: |
+        Review for:
+        - Pure function design when possible
+        - Input validation and error handling
+        - TypeScript type safety
+        - Unit test coverage
+        - Performance considerations for frequently called utilities
+    
+    # Custom Hooks
+    - path: "src/hooks/**/*.ts"
+      instructions: |
+        Review for:
+        - Proper hook naming (use prefix)
+        - Hook dependencies and useEffect cleanup
+        - Return value consistency
+        - Type safety for hook arguments and returns
+        - Reusability and single responsibility
+    
+    # Configuration Files
+    - path: "*.config.*"
+      instructions: |
+        Review for:
+        - Proper configuration structure
+        - TypeScript configuration alignment
+        - Build optimization settings
+        - Security considerations (no secrets)
+    
+    # Styling
+    - path: "**/*.css"
+      instructions: |
+        Review for:
+        - Tailwind CSS best practices
+        - No duplicate utility classes
+        - Responsive design patterns
+        - Accessibility (color contrast, focus states)
+        - CSS custom properties usage for theming
+
+  # Tool-specific configurations
+  tools:
+    # GitHub Actions workflow linting
+    actionlint:
+      enabled: true
+    
+    # Shell script analysis
+    shellcheck:
+      enabled: true
+    
+    # Markdown linting
+    markdownlint:
+      enabled: true
+    
+    # YAML linting
+    yamllint:
+      enabled: true
+    
+    # Language-specific linters
+    eslint:
+      enabled: true
+    
+    # TypeScript compiler checks
+    tsc:
+      enabled: true
+    
+    # Biome (fast linter/formatter) - if used
+    biome:
+      enabled: false
+
+# Chat Configuration
+chat:
+  # Enable AI-powered chat on PRs
+  auto_reply: true
+
+# Knowledge Base Configuration
+knowledge_base:
+  # Learnings from past reviews
+  learnings:
+    # Scope: global, repository, or organization
+    scope: repository
+
+  # Opt out of knowledge base indexing for these paths (see 'ignore' section for review exclusions)
+  opt_out:
+    - "coverage/**"
+    - "dist/**"
+    - "build/**"
+    - "node_modules/**"
+
+# Repository-Specific Context
+context:
+  # Project-specific notes for the AI reviewer
+  - |
+    WakeTube is a premium video alarm clock app built with React 19, TypeScript, and Capacitor.
+    Key principles:
+    1. No-snooze philosophy - alarms must be intentional
+    2. Glassmorphic design with high-end aesthetics
+    3. Wake Lock API for screen management
+    4. YouTube IFrame API for video playback
+    5. Native Android/iOS support via Capacitor
+    6. localStorage for alarm persistence
+    7. Comprehensive testing with Vitest
+  
+  - |
+    Technology stack:
+    - Frontend: React 19, TypeScript, Vite 6
+    - Styling: Tailwind CSS (local installation, not CDN)
+    - Testing: Vitest, React Testing Library
+    - Native: Capacitor 7 (Android + iOS)
+    - Icons: lucide-react
+    - State: useState/useEffect (no external state management)
+  
+  - |
+    Code quality standards:
+    - Test coverage target: High coverage for core components
+    - TypeScript: Strict typing, minimal 'any' usage
+    - React: Hooks-based, functional components only
+    - Accessibility: WCAG 2.1 AA compliance for UI components
+    - Performance: Optimize re-renders, lazy load when appropriate
+
+# Tone and Style
+tone_instructions: |
+  Use a professional yet friendly tone.
+  Be constructive and educational in feedback.
+  Prioritize security, accessibility, and performance issues.
+  Acknowledge good patterns and practices.
+  Suggest improvements with clear rationale.
+  Reference React 19, TypeScript, and Capacitor best practices.
+
+# Issue Detection
+issues:
+  # Detect potential issues
+  high_severity_threshold: 0.7
+  
+  # Categories to detect
+  categories:
+    - security
+    - performance
+    - accessibility
+    - best-practices
+    - code-smell
+    - documentation
+    - testing
+  
+  # Auto-create GitHub issues for critical findings
+  auto_create_github_issue: false
+
+# Ignore patterns (files/paths to skip in reviews)
+ignore:
+  # Dependencies
+  - "node_modules/**"
+  - "package-lock.json"
+  - "pnpm-lock.yaml"
+  
+  # Build outputs
+  - "dist/**"
+  - "build/**"
+  - "coverage/**"
+  - ".vite/**"
+  
+  # Generated files
+  - "android/build/**"
+  - "android/.gradle/**"
+  - "ios/Pods/**"
+  - "ios/build/**"
+  
+  # Config that rarely needs review
+  - "*.lock"
+  - ".gitignore"
+  
+  # Test outputs
+  - "test-output.json"
+  - "*.log"
+  
+  # IDE and system files
+  - ".DS_Store"
+  - ".idea/**"
+  - ".vscode/**"
+  - "*.swp"
+  - "*~"
+
+# Abbreviations for better understanding of domain-specific terms
+abbreviations:
+  WakeTube: "Premium video alarm clock application"
+  Capacitor: "Cross-platform native runtime for web apps"
+  UNUserNotificationCenter: "iOS notification framework"
+  AlarmManager: "Android alarm scheduling service"
+  Wake Lock: "Browser API to prevent screen from sleeping"
+  Glassmorphism: "UI design style with frosted glass effect"
+  YouTube IFrame API: "YouTube's embedded player JavaScript API"
