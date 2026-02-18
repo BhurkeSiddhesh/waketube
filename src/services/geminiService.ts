@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-interface YouTubeSearchResult {
+export interface YouTubeSearchResult {
   title: string;
   url: string;
 }
@@ -46,6 +46,15 @@ export class GeminiService {
 
       try {
         const data = JSON.parse(cleanJson);
+    if (data.url) {
+        try {
+            const url = new URL(data.url);
+            if (url.protocol !== "https:") return null;
+            if (!url.hostname.endsWith("youtube.com") && url.hostname !== "youtu.be") return null;
+        } catch (e) {
+            return null;
+        }
+    }
         if (data.title && data.url) {
           return {
             title: data.title,
