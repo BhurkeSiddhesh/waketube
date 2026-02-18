@@ -147,7 +147,13 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-darker text-body font-sans relative flex flex-col transition-colors duration-300">
-      
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-md focus:font-bold focus:shadow-lg focus:outline-none"
+      >
+        Skip to content
+      </a>
+
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -155,7 +161,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex-1 flex flex-col p-6 max-w-2xl mx-auto w-full">
+      <main className="relative z-10 flex-1 flex flex-col p-6 max-w-2xl mx-auto w-full">
         
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
@@ -174,7 +180,7 @@ const App: React.FC = () => {
         </header>
 
         {/* Hero Clock */}
-        <div className="mb-12 flex flex-col items-center justify-center py-10">
+        <div id="main-content" className="mb-12 flex flex-col items-center justify-center py-10" tabIndex={-1}>
           <div className="text-[6rem] sm:text-[8rem] font-black font-mono leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-body to-gray-500/50 select-none">
             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
           </div>
@@ -225,7 +231,7 @@ const App: React.FC = () => {
           <Plus size={32} />
         </button>
 
-      </div>
+      </main>
 
       {/* Modals & Overlays */}
       {isAddModalOpen && (
