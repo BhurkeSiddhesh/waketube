@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Alarm, DayOfWeek, DAYS_LABELS } from '../types';
-import { X, Youtube, Clock, Loader2 } from 'lucide-react';
+import { Alarm, DayOfWeek, DAYS_LABELS, FULL_DAYS_LABELS } from '../types';
+import { X, Youtube, Clock, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { useVideoHistory } from '../hooks/useVideoHistory';
 import { fetchYouTubeTitle, isValidYouTubeUrl } from '../utils/youtube';
+import { geminiService } from '../services/geminiService';
 
 interface AddAlarmModalProps {
   onClose: () => void;
@@ -11,6 +12,10 @@ interface AddAlarmModalProps {
   onUpdate?: (alarm: Alarm) => void;
   alarm?: Alarm; // If provided, we're editing this alarm
 }
+
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
 // Get time-based label suggestions
 const getTimeBasedSuggestion = (hour: number): string => {
@@ -24,7 +29,7 @@ const getTimeBasedSuggestion = (hour: number): string => {
   return "Late Night Vibes";
 };
 
-const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate, alarm: editingAlarm }) => {
+const AddAlarmModal: React.FC<AddAlarmModalProps> = React.memo(({ onClose, onSave, onUpdate, alarm: editingAlarm }) => {
   const isEditing = !!editingAlarm;
 
   const [time, setTime] = useState(() => {
@@ -40,6 +45,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
   const [videoUrl, setVideoUrl] = useState(editingAlarm?.videoUrl || 'https://www.youtube.com/watch?v=7GlsxNI4LVI');
   const [videoTitle, setVideoTitle] = useState<string | null>(null);
   const [isFetchingTitle, setIsFetchingTitle] = useState(false);
+
+  // AI Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchingAI, setIsSearchingAI] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(() => {
     if (editingAlarm) return editingAlarm.days;
     const today = new Date().getDay() as DayOfWeek;
@@ -47,6 +58,10 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
   });
 
   const { videos, addVideo, removeVideo } = useVideoHistory();
+
+  // Generate unique IDs for form inputs to ensure accessibility
+  const labelId = React.useId();
+  const videoId = React.useId();
 
   // Fetch title when URL changes (debounced)
   const fetchTitle = useCallback(async (url: string) => {
@@ -68,6 +83,34 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
     return () => clearTimeout(timer);
   }, [videoUrl, fetchTitle]);
+
+  const handleAISearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setIsSearchingAI(true);
+    setSearchError(null);
+
+    // Check if API key is available before making the call
+    if (!geminiService.isAvailable()) {
+      setIsSearchingAI(false);
+      setSearchError('AI Search unavailable (API Key missing). Please enter a URL manually.');
+      return;
+    }
+
+    const result = await geminiService.searchYouTube(searchQuery);
+
+    if (result) {
+      setVideoUrl(result.url);
+      setLabel(result.title.substring(0, 30)); // Update label to song name
+      setVideoTitle(result.title);
+      setSearchQuery(''); // Clear search on success
+    } else {
+      // Improved error handling
+      setSearchError('No matching video found. Try a different description.');
+    }
+
+    setIsSearchingAI(false);
+  };
 
   const toggleDay = (day: DayOfWeek) => {
     if (selectedDays.includes(day)) {
@@ -130,17 +173,18 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
         <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto no-scrollbar">
 
           {/* Time Input - Custom Dropdowns */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time</label>
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider">Time</legend>
             <div className="flex gap-4">
               <div className="flex-1 relative">
                 <select
+                  aria-label="Hour"
                   value={time.split(':')[0]}
                   onChange={(e) => setTime(`${e.target.value}:${time.split(':')[1]}`)}
                   className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
                   style={{ textAlignLast: 'center' }}
                 >
-                  {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(hour => (
+                  {HOURS.map(hour => (
                     <option key={hour} value={hour} className="text-body bg-white dark:bg-gray-800">{hour}</option>
                   ))}
                 </select>
@@ -149,27 +193,29 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               <div className="text-4xl sm:text-5xl font-mono flex items-center text-gray-400">:</div>
               <div className="flex-1 relative">
                 <select
+                  aria-label="Minute"
                   value={time.split(':')[1]}
                   onChange={(e) => setTime(`${time.split(':')[0]}:${e.target.value}`)}
                   className="w-full glass text-4xl sm:text-5xl font-mono p-4 rounded-xl border border-borderDim focus:border-primary focus:outline-none text-center text-body appearance-none bg-transparent cursor-pointer"
                   style={{ textAlignLast: 'center' }}
                 >
-                  {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(minute => (
+                  {MINUTES.map(minute => (
                     <option key={minute} value={minute} className="text-body bg-white dark:bg-gray-800">{minute}</option>
                   ))}
                 </select>
                 <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none text-gray-400 text-xs font-bold">MIN</div>
               </div>
             </div>
-          </div>
+          </fieldset>
 
           {/* Days Selection */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Repeats</label>
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-medium text-gray-500 uppercase tracking-wider">Repeats</legend>
             <div className="flex justify-between gap-1.5">
               {DAYS_LABELS.map((dayLabel, idx) => (
                 <button
                   key={idx}
+                  aria-label={FULL_DAYS_LABELS[idx]}
                   data-testid={`day-toggle-${idx}`}
                   onClick={() => toggleDay(idx as DayOfWeek)}
                   className={clsx(
@@ -183,18 +229,59 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {/* YouTube URL Input */}
           <div className="space-y-3">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <label htmlFor={videoId} className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Youtube size={14} className="text-danger" />
               YouTube Video
             </label>
 
-            {/* Saved Videos Dropdown - Always visible for debugging/verification */}
+            {/* AI Search */}
+            <div className="relative">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (searchError) setSearchError(null);
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAISearch()}
+                  placeholder="✨ Describe a mood or song..."
+                  className={clsx(
+                    "flex-1 glass text-sm p-3 rounded-lg border focus:border-primary focus:outline-none text-body placeholder:text-gray-400",
+                    searchError ? "border-red-300 bg-red-50/50" : "border-borderDim"
+                  )}
+                />
+                <button
+                  onClick={handleAISearch}
+                  disabled={isSearchingAI || !searchQuery.trim()}
+                  className="bg-gradient-to-br from-primary to-primary-dark text-white p-3 rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Ask AI to find a video"
+                >
+                  {isSearchingAI ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                </button>
+              </div>
+              {searchError && (
+                <div className="absolute -bottom-6 left-0 flex items-center gap-1.5 text-xs text-red-500 animate-in slide-in-from-top-1">
+                  <AlertCircle size={12} />
+                  {searchError}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 my-2">
+               <div className="h-px bg-borderDim flex-1"></div>
+               <span className="text-[10px] text-gray-400 uppercase font-medium">OR</span>
+               <div className="h-px bg-borderDim flex-1"></div>
+            </div>
+
+            {/* Saved Videos Dropdown - Always visible when videos exist */}
             <div className="space-y-2">
               <select
+                aria-label="Recent Videos"
                 value=""
                 onChange={(e) => {
                   const video = videos.find(v => v.url === e.target.value);
@@ -207,7 +294,7 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
                 disabled={videos.length === 0}
               >
                 <option value="" disabled hidden className="bg-white dark:bg-gray-800 text-body">
-                  {videos.length > 0 ? `Recent Videos (${videos.length})` : "No saved videos yet"}
+                  {videos.length > 0 ? `📚 Choose from saved videos (${videos.length})` : "No saved videos yet"}
                 </option>
                 {videos.map((video) => (
                   <option key={video.url} value={video.url} className="bg-white dark:bg-gray-800 text-body">
@@ -219,10 +306,12 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
             {/* URL Input */}
             <input
+              id={videoId}
               type="text"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder={videos.length > 0 ? "Or paste a new YouTube URL" : "Paste YouTube video URL"}
+              maxLength={2048}
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
 
@@ -248,12 +337,14 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
 
           {/* Label Input */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Label</label>
+            <label htmlFor={labelId} className="text-xs font-medium text-gray-500 uppercase tracking-wider">Label</label>
             <input
+              id={labelId}
               type="text"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder={suggestedLabel}
+              maxLength={50}
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
           </div>
@@ -273,6 +364,6 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
       </div>
     </div>
   );
-};
+});
 
 export default AddAlarmModal;

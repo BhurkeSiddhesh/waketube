@@ -100,12 +100,12 @@ describe('AlarmCard', () => {
             expect(checkbox).not.toBeChecked();
         });
 
-        it('calls onToggle with alarm id when toggle is clicked', async () => {
+        it('calls onToggle with alarm object when toggle is clicked', async () => {
             const user = userEvent.setup();
             render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
             const checkbox = screen.getByRole('checkbox', { name: 'Toggle alarm for 7:30 AM' });
             await user.click(checkbox);
-            expect(onToggle).toHaveBeenCalledWith('test-id-1');
+            expect(onToggle).toHaveBeenCalledWith(mockAlarm);
         });
     });
 

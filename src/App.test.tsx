@@ -14,7 +14,7 @@ const { mockAlarmScheduler } = vi.hoisted(() => {
     return {
         mockAlarmScheduler: {
             isNativeMode: vi.fn(() => false),
-            getPlatform: vi.fn(() => 'web' as const),
+            getPlatform: vi.fn(() => 'web' as 'web' | 'android' | 'ios'),
             ensurePermissions: vi.fn().mockResolvedValue(true),
             requestPermissions: vi.fn().mockResolvedValue(true),
             scheduleAlarm: vi.fn().mockResolvedValue({ success: true }),

@@ -5,12 +5,12 @@ import clsx from 'clsx';
 
 interface AlarmCardProps {
   alarm: Alarm;
-  onToggle: (id: string) => void;
+  onToggle: (alarm: Alarm) => void;
   onDelete: (id: string) => void;
   onEdit: (alarm: Alarm) => void;
 }
 
-const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit }) => {
+const AlarmCard: React.FC<AlarmCardProps> = React.memo(({ alarm, onToggle, onDelete, onEdit }) => {
   const formatTime = (time: string) => {
     const [h, m] = time.split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
@@ -81,7 +81,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               type="checkbox"
               className="sr-only peer"
               checked={alarm.enabled}
-              onChange={() => onToggle(alarm.id)}
+              onChange={() => onToggle(alarm)}
               aria-label={`Toggle alarm for ${fullTime}`}
             />
             <div className={clsx(
@@ -139,6 +139,6 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
       </div>
     </div>
   );
-};
+});
 
 export default AlarmCard;
