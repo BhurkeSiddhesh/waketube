@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AlarmCard from './AlarmCard';
 import { Alarm, DayOfWeek } from '../types';
@@ -26,6 +26,10 @@ describe('AlarmCard', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('rendering', () => {
@@ -110,12 +114,37 @@ describe('AlarmCard', () => {
     });
 
     describe('delete functionality', () => {
-        it('calls onDelete with alarm id when delete button is clicked', async () => {
+        it('calls onDelete only after second click (confirmation)', async () => {
             const user = userEvent.setup();
             render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
             const deleteButton = screen.getByTestId('delete-alarm');
+
+            // First click
+            await user.click(deleteButton);
+            expect(onDelete).not.toHaveBeenCalled();
+            expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+            // Second click
             await user.click(deleteButton);
             expect(onDelete).toHaveBeenCalledWith('test-id-1');
+        });
+
+        it('resets confirmation state after 3 seconds', async () => {
+            vi.useFakeTimers();
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const deleteButton = screen.getByTestId('delete-alarm');
+
+            // Click to show confirm
+            fireEvent.click(deleteButton);
+            expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+            // Fast forward time
+            act(() => {
+                vi.advanceTimersByTime(3000);
+            });
+
+            // Should be reset
+            expect(screen.queryByText('Confirm?')).not.toBeInTheDocument();
         });
     });
 

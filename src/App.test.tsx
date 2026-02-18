@@ -166,12 +166,16 @@ describe('App', () => {
             await user.click(screen.getByRole('button', { name: 'Add new alarm' }));
             await user.click(screen.getByText('Set Alarm'));
 
-            // Find delete button (has hover:text-danger class)
-            const deleteBtn = document.querySelector('button.hover\\:text-danger');
-            if (deleteBtn) {
-                await user.click(deleteBtn);
-                expect(screen.getByText('No alarms set')).toBeInTheDocument();
-            }
+            // Find delete button
+            const deleteBtn = screen.getByTestId('delete-alarm');
+
+            // First click (trigger confirmation)
+            await user.click(deleteBtn);
+            expect(screen.queryByText('No alarms set')).not.toBeInTheDocument();
+
+            // Second click (confirm delete)
+            await user.click(deleteBtn);
+            expect(screen.getByText('No alarms set')).toBeInTheDocument();
         });
     });
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alarm, DAYS_LABELS, DayOfWeek } from '../types';
 import { Trash2, Play, Pencil } from 'lucide-react';
 import clsx from 'clsx';
@@ -11,6 +11,16 @@ interface AlarmCardProps {
 }
 
 const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isDeleting) {
+      timer = setTimeout(() => setIsDeleting(false), 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [isDeleting]);
+
   const formatTime = (time: string) => {
     const [h, m] = time.split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
@@ -22,6 +32,15 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
   };
 
   const { time, ampm } = formatTime(alarm.time);
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDeleting) {
+      onDelete(alarm.id);
+    } else {
+      setIsDeleting(true);
+    }
+  };
 
   return (
     <div className={clsx(
@@ -62,6 +81,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-primary mt-2 hover:text-primary-light transition-colors bg-primary/5 px-2.5 py-1 rounded-full"
               onClick={(e) => e.stopPropagation()}
+              aria-label={`Preview video for ${time} ${ampm} (opens in a new tab)`}
             >
               <Play size={10} className="fill-current" />
               <span>Preview</span>
@@ -77,6 +97,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               className="sr-only peer"
               checked={alarm.enabled}
               onChange={() => onToggle(alarm.id)}
+              aria-label={`Toggle alarm for ${time} ${ampm}`}
             />
             <div className={clsx(
               "w-12 h-7 rounded-full peer transition-all duration-300",
@@ -94,15 +115,27 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               onClick={() => onEdit(alarm)}
               className="text-gray-400 hover:text-primary hover:bg-primary/10 transition-all p-2 rounded-lg"
               data-testid="edit-alarm"
+              aria-label={`Edit alarm for ${time} ${ampm}`}
             >
               <Pencil size={16} />
             </button>
             <button
-              onClick={() => onDelete(alarm.id)}
-              className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg"
+              onClick={handleDelete}
+              className={clsx(
+                "transition-all p-2 rounded-lg flex items-center gap-1.5",
+                isDeleting
+                  ? "bg-red-500 text-white hover:bg-red-600 shadow-md ring-2 ring-red-200"
+                  : "text-gray-400 hover:text-danger hover:bg-danger/10"
+              )}
               data-testid="delete-alarm"
+              aria-label={isDeleting ? "Confirm delete" : `Delete alarm for ${time} ${ampm}`}
             >
               <Trash2 size={16} />
+              {isDeleting && (
+                <span className="text-xs font-bold animate-in fade-in slide-in-from-right-2 whitespace-nowrap">
+                  Confirm?
+                </span>
+              )}
             </button>
           </div>
         </div>
