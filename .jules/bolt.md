@@ -96,3 +96,7 @@
 ## 2025-05-22 - [Critical Resource Preloading]
 **Learning:** The YouTube IFrame API was being loaded only when the alarm triggered, adding network latency to the critical "wake up" path.
 **Action:** Preload critical external scripts (like YouTube API) at app startup using a custom hook to ensure zero-latency availability when needed.
+
+## 2025-05-22 - [Rejected: Unverified Preloading & CSP]
+**Learning:** Preloading external scripts (like YouTube API) without verifying CSP compatibility or implementing verification logic (onload/onerror) can be regressive and rejected.
+**Action:** Always verify CSP restrictions before injecting scripts and implement robust loading state management.

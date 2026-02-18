@@ -8,7 +8,6 @@ import AlarmTrigger from './components/AlarmTrigger';
 import WakeTubeIcon from './components/WakeTubeIcon';
 import { v4 as uuidv4 } from 'uuid';
 import { AlarmScheduler, onAlarmTriggered } from './plugins/AlarmScheduler';
-import { useYouTubePreloader } from './hooks/useYouTubePreloader';
 
 const generateId = () => uuidv4();
 
@@ -39,9 +38,6 @@ const calculateNextTrigger = (time: string, days: DayOfWeek[]): number => {
 };
 
 const App: React.FC = () => {
-  // Preload YouTube API for faster alarm startup
-  useYouTubePreloader();
-
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
     const saved = localStorage.getItem('waketube-alarms');
     return saved ? JSON.parse(saved) : [];
