@@ -254,8 +254,8 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               type="text"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              maxLength={50}
               placeholder={suggestedLabel}
+              maxLength={50}
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
           </div>
