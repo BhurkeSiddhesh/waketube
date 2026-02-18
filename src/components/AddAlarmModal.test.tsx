@@ -42,6 +42,16 @@ describe('AddAlarmModal', () => {
             render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
             expect(screen.getByText('Set Alarm')).toBeInTheDocument();
         });
+
+        it('enforces maximum length on input fields', () => {
+            render(<AddAlarmModal onClose={onClose} onSave={onSave} />);
+
+            const urlInput = screen.getByPlaceholderText(/YouTube video URL/i);
+            const labelInput = screen.getByLabelText(/Label/i);
+
+            expect(urlInput).toHaveAttribute('maxLength', '2048');
+            expect(labelInput).toHaveAttribute('maxLength', '50');
+        });
     });
 
 
