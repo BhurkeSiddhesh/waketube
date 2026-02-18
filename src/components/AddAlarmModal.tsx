@@ -222,8 +222,8 @@ const AddAlarmModal: React.FC<AddAlarmModalProps> = ({ onClose, onSave, onUpdate
               type="text"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              maxLength={2048}
               placeholder={videos.length > 0 ? "Or paste a new YouTube URL" : "Paste YouTube video URL"}
+              maxLength={2048}
               className="w-full glass text-sm p-3 rounded-lg border border-borderDim focus:border-primary focus:outline-none text-body placeholder:text-gray-400"
             />
 
