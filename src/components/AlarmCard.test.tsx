@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AlarmCard from './AlarmCard';
 import { Alarm, DayOfWeek } from '../types';
@@ -26,6 +26,10 @@ describe('AlarmCard', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('rendering', () => {
@@ -110,12 +114,77 @@ describe('AlarmCard', () => {
     });
 
     describe('delete functionality', () => {
-        it('calls onDelete with alarm id when delete button is clicked', async () => {
+        it('calls onDelete only after double click (confirmation)', async () => {
             const user = userEvent.setup();
             render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
             const deleteButton = screen.getByTestId('delete-alarm');
+
+            // First click - show confirmation
+            await user.click(deleteButton);
+            expect(onDelete).not.toHaveBeenCalled();
+            expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+            // Second click - actual delete
             await user.click(deleteButton);
             expect(onDelete).toHaveBeenCalledWith('test-id-1');
+        });
+
+        it('reverts confirmation state after 3 seconds', () => {
+            vi.useFakeTimers();
+
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const deleteButton = screen.getByTestId('delete-alarm');
+
+            // First click
+            fireEvent.click(deleteButton);
+            expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+            // Wait 3 seconds
+            act(() => {
+                vi.advanceTimersByTime(3000);
+            });
+
+            // Should be back to initial state (no Confirm text)
+            expect(screen.queryByText('Confirm?')).not.toBeInTheDocument();
+
+            // Clicking again should restart confirmation flow, not delete immediately
+            fireEvent.click(deleteButton);
+            expect(onDelete).not.toHaveBeenCalled();
+            expect(screen.getByText('Confirm?')).toBeInTheDocument();
+        });
+    });
+
+    describe('accessibility', () => {
+        it('has accessible label for edit button', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const editBtn = screen.getByTestId('edit-alarm');
+            expect(editBtn).toHaveAttribute('aria-label', 'Edit alarm for 7:30 AM');
+            expect(editBtn).toHaveAttribute('title', 'Edit alarm');
+        });
+
+        it('has accessible label for delete button', async () => {
+             const user = userEvent.setup();
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const deleteBtn = screen.getByTestId('delete-alarm');
+            expect(deleteBtn).toHaveAttribute('aria-label', 'Delete alarm for 7:30 AM');
+            expect(deleteBtn).toHaveAttribute('title', 'Delete alarm');
+
+            // Check label changes on confirmation
+            await user.click(deleteBtn);
+            expect(deleteBtn).toHaveAttribute('aria-label', 'Confirm deletion');
+            expect(deleteBtn).toHaveAttribute('title', 'Confirm deletion');
+        });
+
+        it('has accessible label for toggle switch', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const checkbox = screen.getByRole('checkbox');
+            expect(checkbox).toHaveAttribute('aria-label', 'Toggle alarm for 7:30 AM - Morning Workout');
+        });
+
+        it('has accessible label for preview link', () => {
+            render(<AlarmCard alarm={mockAlarm} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />);
+            const link = screen.getByRole('link');
+            expect(link).toHaveAttribute('aria-label', 'Preview alarm video (opens in a new tab)');
         });
     });
 

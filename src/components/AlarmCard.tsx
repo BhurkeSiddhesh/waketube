@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alarm, DAYS_LABELS, DayOfWeek } from '../types';
-import { Trash2, Play, Pencil } from 'lucide-react';
+import { Trash2, Play, Pencil, Check } from 'lucide-react';
 import clsx from 'clsx';
 
 interface AlarmCardProps {
@@ -11,6 +11,26 @@ interface AlarmCardProps {
 }
 
 const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isDeleting) {
+      timer = setTimeout(() => {
+        setIsDeleting(false);
+      }, 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [isDeleting]);
+
+  const handleDelete = () => {
+    if (isDeleting) {
+      onDelete(alarm.id);
+    } else {
+      setIsDeleting(true);
+    }
+  };
+
   const formatTime = (time: string) => {
     const [h, m] = time.split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
@@ -60,6 +80,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               href={alarm.videoUrl}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`Preview alarm video (opens in a new tab)`}
               className="inline-flex items-center gap-1.5 text-xs text-primary mt-2 hover:text-primary-light transition-colors bg-primary/5 px-2.5 py-1 rounded-full"
               onClick={(e) => e.stopPropagation()}
             >
@@ -77,6 +98,7 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               className="sr-only peer"
               checked={alarm.enabled}
               onChange={() => onToggle(alarm.id)}
+              aria-label={`Toggle alarm for ${time} ${ampm} ${alarm.label ? '- ' + alarm.label : ''}`}
             />
             <div className={clsx(
               "w-12 h-7 rounded-full peer transition-all duration-300",
@@ -94,15 +116,31 @@ const AlarmCard: React.FC<AlarmCardProps> = ({ alarm, onToggle, onDelete, onEdit
               onClick={() => onEdit(alarm)}
               className="text-gray-400 hover:text-primary hover:bg-primary/10 transition-all p-2 rounded-lg"
               data-testid="edit-alarm"
+              aria-label={`Edit alarm for ${time} ${ampm}`}
+              title="Edit alarm"
             >
               <Pencil size={16} />
             </button>
             <button
-              onClick={() => onDelete(alarm.id)}
-              className="text-gray-400 hover:text-danger hover:bg-danger/10 transition-all p-2 rounded-lg"
+              onClick={handleDelete}
+              className={clsx(
+                "transition-all p-2 rounded-lg flex items-center gap-1",
+                isDeleting
+                  ? "bg-danger text-white hover:bg-danger/90"
+                  : "text-gray-400 hover:text-danger hover:bg-danger/10"
+              )}
               data-testid="delete-alarm"
+              aria-label={isDeleting ? "Confirm deletion" : `Delete alarm for ${time} ${ampm}`}
+              title={isDeleting ? "Confirm deletion" : "Delete alarm"}
             >
-              <Trash2 size={16} />
+              {isDeleting ? (
+                <>
+                  <span className="text-xs font-bold px-1">Confirm?</span>
+                  <Check size={14} />
+                </>
+              ) : (
+                <Trash2 size={16} />
+              )}
             </button>
           </div>
         </div>
